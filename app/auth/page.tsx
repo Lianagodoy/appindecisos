@@ -9,7 +9,6 @@ export default function AuthPage() {
   const [email, setEmail] = useState<string | null>(null)
   const [name, setName] = useState('')
 
-  // 1) Checa usuário logado ao montar
   useEffect(() => {
     let mounted = true
     ;(async () => {
@@ -19,7 +18,6 @@ export default function AuthPage() {
       setLoading(false)
     })()
 
-    // 2) Sincroniza com a tabela users quando o estado de auth muda
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentEmail = session?.user?.email ?? null
@@ -46,7 +44,6 @@ export default function AuthPage() {
 
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>
 
-  // Logada: mostra e-mail e permite salvar/atualizar nome
   if (email) {
     const saveName = async () => {
       await supabase.from('users').upsert({ email, name }, { onConflict: 'email' })
@@ -74,7 +71,6 @@ export default function AuthPage() {
     )
   }
 
-  // Não logada: mostra o formulário padrão de e-mail/senha
   return (
     <div style={{ maxWidth: 420, margin: '40px auto', padding: 16 }}>
       <h1>Entrar / Criar conta</h1>
@@ -83,6 +79,6 @@ export default function AuthPage() {
         providers={[]}
         redirectTo="https://appindecisos.vercel.app/auth"
       />
-    </div>
-  )
+    </div>
+  )
 }
