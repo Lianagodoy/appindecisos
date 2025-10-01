@@ -102,18 +102,21 @@ export default function AuthPage() {
   }
 
   const saveName = async () => {
-    setMsg(null)
-    if (!email) return
-    const { error } = await supabase
-      .from('users')
-      .upsert({ email, name }, { onConflict: 'email' })
-    if (error) {
-      setMsg('Erro ao salvar: ' + error.message)
-    } else {
-      setMsg('Nome salvo com sucesso!')
-    }
-  }
+  setMsg(null)
+  if (!email) return
 
+  // Atualiza a linha já existente do usuário (pela coluna email)
+  const { error } = await supabase
+    .from('users')
+    .update({ name })
+    .eq('email', email)
+
+  if (error) {
+    setMsg('Erro ao salvar: ' + error.message)
+  } else {
+    setMsg('Nome salvo com sucesso!')
+  }
+}
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>
 
   if (email) {
