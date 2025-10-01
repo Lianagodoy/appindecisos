@@ -101,7 +101,7 @@ export default function AuthPage() {
     setName('')
   }
 
-  const saveName = async () => {
+const saveName = async () => {
   setMsg(null)
   if (!email) return
 
