@@ -8,13 +8,29 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [msg, setMsg] = useState<string | null>(null)
+
+  // carrega usuário e nome já salvo (se existir)
+  async function loadProfile(currentEmail: string) {
+    // garante que exista uma linha para esse email (não mexe no nome aqui)
+    await supabase.from('users').upsert({ email: currentEmail }, { onConflict: 'email' })
+    // busca o nome atual
+    const { data, error } = await supabase
+      .from('users')
+      .select('name')
+      .eq('email', currentEmail)
+      .single()
+    if (!error && data) setName(data.name ?? '')
+  }
 
   useEffect(() => {
     let mounted = true
     ;(async () => {
       const { data } = await supabase.auth.getUser()
+      const currentEmail = data.user?.email ?? null
       if (!mounted) return
-      setEmail(data.user?.email ?? null)
+      setEmail(currentEmail)
+      if (currentEmail) await loadProfile(currentEmail)
       setLoading(false)
     })()
 
@@ -22,12 +38,7 @@ export default function AuthPage() {
       async (_event, session) => {
         const currentEmail = session?.user?.email ?? null
         setEmail(currentEmail)
-
-        if (currentEmail) {
-          await supabase
-            .from('users')
-            .upsert({ email: currentEmail, name: name || null }, { onConflict: 'email' })
-        }
+        if (currentEmail) await loadProfile(currentEmail)
       }
     )
 
@@ -35,21 +46,30 @@ export default function AuthPage() {
       mounted = false
       authListener.subscription.unsubscribe()
     }
-  }, [name])
+  }, [])
 
   const signOut = async () => {
     await supabase.auth.signOut()
     setEmail(null)
+    setName('')
+  }
+
+  const saveName = async () => {
+    setMsg(null)
+    if (!email) return
+    const { error } = await supabase
+      .from('users')
+      .upsert({ email, name }, { onConflict: 'email' })
+    if (error) {
+      setMsg('Erro ao salvar: ' + error.message)
+    } else {
+      setMsg('Nome salvo com sucesso!')
+    }
   }
 
   if (loading) return <div style={{ padding: 24 }}>Carregando…</div>
 
   if (email) {
-    const saveName = async () => {
-      await supabase.from('users').upsert({ email, name }, { onConflict: 'email' })
-      alert('Nome salvo!')
-    }
-
     return (
       <div style={{ maxWidth: 420, margin: '40px auto', padding: 16 }}>
         <h2>Você está logada</h2>
@@ -64,6 +84,7 @@ export default function AuthPage() {
             placeholder="Ex.: Liana"
           />
           <button onClick={saveName} style={{ marginTop: 12 }}>Salvar nome</button>
+          {msg && <p style={{ marginTop: 8 }}>{msg}</p>}
         </div>
 
         <button onClick={signOut} style={{ marginTop: 24 }}>Sair</button>
@@ -79,6 +100,6 @@ export default function AuthPage() {
         providers={[]}
         redirectTo="https://appindecisos.vercel.app/auth"
       />
-    </div>
-  )
+    </div>
+  )
 }
