@@ -24,16 +24,63 @@ export default function AuthPage() {
   }
 
   useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const { data } = await supabase.auth.getUser()
-      const currentEmail = data.user?.email ?? null
-      if (!mounted) return
-      setEmail(currentEmail)
-      if (currentEmail) await loadProfile(currentEmail)
-      setLoading(false)
-    })()
+  let mounted = true
 
+  async function bootstrap() {
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      if (error) {
+        console.error('getUser error:', error)
+      }
+      if (!mounted) return
+
+      const currentEmail = data?.user?.email ?? null
+      setEmail(currentEmail)
+
+      if (currentEmail) {
+        // garante que existe uma linha e lê o nome salvo
+        await supabase.from('users').upsert({ email: currentEmail }, { onConflict: 'email' })
+        const { data: profile } = await supabase
+          .from('users')
+          .select('name')
+          .eq('email', currentEmail)
+          .single()
+        setName(profile?.name ?? '')
+      }
+    } catch (e) {
+      console.error('bootstrap failed:', e)
+    } finally {
+      // IMPORTANTÍSSIMO: sempre liberar o loading
+      if (mounted) setLoading(false)
+    }
+  }
+
+  bootstrap()
+
+  const { data: authListener } = supabase.auth.onAuthStateChange(
+    async (_event, session) => {
+      const currentEmail = session?.user?.email ?? null
+      setEmail(currentEmail)
+      if (currentEmail) {
+        await supabase.from('users').upsert({ email: currentEmail }, { onConflict: 'email' })
+        const { data: profile } = await supabase
+          .from('users')
+          .select('name')
+          .eq('email', currentEmail)
+          .single()
+        setName(profile?.name ?? '')
+      } else {
+        setName('')
+      }
+    }
+  )
+
+  return () => {
+    mounted = false
+    authListener.subscription.unsubscribe()
+  }
+}, [])
+  
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const currentEmail = session?.user?.email ?? null
