@@ -18,6 +18,6 @@ export default function Home() {
           Entrar / Minha conta
         </a>
       </div>
-    </main>
-  )
+    </main>
+  )
 }
