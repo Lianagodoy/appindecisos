@@ -8,7 +8,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
   const [name, setName] = useState<string>('')
-
+  const [saved, setSaved] = useState(false)
+  
   useEffect(() => {
     let mounted = true
 
@@ -54,17 +55,27 @@ export default function AuthPage() {
     }
   }, [])
 
-  async function salvarNome() {
-    if (!email) return alert('Você precisa estar logada para salvar o nome.')
-    const { error } = await supabase.from('users').update({ name }).eq('email', email)
-    if (error) {
-      console.error(error)
-      alert('Erro ao salvar o nome 😞')
-    } else {
-      alert('Nome salvo com sucesso! 🎉')
-    }
-  }
+  const salvarNome = async () => {
+  if (!name?.trim()) return
+  setLoading(true)
+  try {
+    const { data: userData } = await supabase.auth.getUser()
+    const email = userData?.user?.email
+    if (!email) return
 
+    const { error } = await supabase
+      .from('users')
+      .update({ name })
+      .eq('email', email)
+
+    if (!error) {
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    }
+  } finally {
+    setLoading(false)
+  }
+}
   async function signOut() {
     await supabase.auth.signOut()
     setEmail(null)
