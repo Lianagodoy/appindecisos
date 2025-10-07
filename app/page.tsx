@@ -1,50 +1,95 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabaseClient'
-import Link from 'next/link'
 
-export default function HomePage() {
-  const [name, setName] = useState<string | null>(null)
+export default function Home() {
+  const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
+  const [name, setName] = useState<string>('')
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser()
-      const user = data.user
+    let mounted = true
+    ;(async () => {
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData.user
+      if (!mounted) return
+
       if (user?.email) {
         setEmail(user.email)
-        const { data: userData } = await supabase
+
+        // busca nome na tabela users
+        const { data } = await supabase
           .from('users')
           .select('name')
           .eq('email', user.email)
           .single()
-        setName(userData?.name ?? null)
-      }
-    }
 
-    fetchUser()
+        if (data?.name) setName(data.name)
+      }
+
+      setLoading(false)
+    })()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async () => {
+      // simples “refresh” de estado quando loga/desloga
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData.user
+      setEmail(user?.email ?? null)
+
+      if (user?.email) {
+        const { data } = await supabase
+          .from('users')
+          .select('name')
+          .eq('email', user.email)
+          .single()
+        setName(data?.name ?? '')
+      } else {
+        setName('')
+      }
+    })
+
+    return () => {
+      listener.subscription.unsubscribe()
+      mounted = false
+    }
   }, [])
 
+  if (loading) {
+    return <main style={{ padding: 24 }}>Carregando…</main>
+  }
+
   return (
-    <main style={{ textAlign: 'center', padding: 40 }}>
-      <h1>🌟 App Indecisos 🌟</h1>
+    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24, textAlign: 'center' }}>
+      <h1>🌼 App Indecisos 🌼</h1>
 
-      {name ? (
-        <p style={{ marginTop: 16 }}>Bem-vinda de volta, <strong>{name}</strong>! 😄</p>
-      ) : email ? (
-        <p style={{ marginTop: 16 }}>Bem-vinda! 💫</p>
+      {email ? (
+        <>
+          <p style={{ marginTop: 8 }}>
+            Bem-vinda, <strong>{name || 'visitante'}</strong>!
+          </p>
+          <div style={{ marginTop: 20 }}>
+            <Link href="/auth">
+              <button style={{ padding: '10px 18px' }}>
+                Ir para minha conta (salvar/editar nome)
+              </button>
+            </Link>
+          </div>
+          <div style={{ marginTop: 12, opacity: 0.7 }}>
+            <small>E-mail: {email}</small>
+          </div>
+        </>
       ) : (
-        <p style={{ marginTop: 16 }}>Bem-vinda ao seu app! 💫</p>
+        <>
+          <p style={{ marginTop: 8 }}>Este é o começo do seu app 😉</p>
+          <div style={{ marginTop: 20 }}>
+            <Link href="/auth">
+              <button style={{ padding: '10px 18px' }}>Entrar / Cadastrar</button>
+            </Link>
+          </div>
+        </>
       )}
-
-      <p style={{ marginTop: 8 }}>Este é o começo do seu app ✨</p>
-
-      <Link href="/auth">
-        <button style={{ marginTop: 24, padding: '10px 20px' }}>
-          Entrar / Cadastrar
-        </button>
-      </Link>
     </main>
   )
 }
