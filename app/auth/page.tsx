@@ -1,95 +1,109 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '../../lib/supabaseClient'
+import Link from 'next/link'
 
 export default function AuthPage() {
+  const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
-  const [name, setName] = useState<string>('')
+  const [name, setName] = useState('')
 
-  // Checa login e mantém sincronizado
+  // 1) Pega usuário logado e carrega o nome da tabela users
   useEffect(() => {
     let mounted = true
-
     ;(async () => {
-      const { data } = await supabase.auth.getUser()
-      if (!mounted) return
-      setEmail(data.user?.email ?? null)
+      const { data: userData } = await supabase.auth.getUser()
+      const user = userData.user
+      if (!mounted || !user?.email) {
+        setLoading(false)
+        return
+      }
+      setEmail(user.email)
+
+      // busca nome salvo
+      const { data } = await supabase
+        .from('users')
+        .select('name')
+        .eq('email', user.email)
+        .single()
+
+      if (data?.name) setName(data.name)
+      setLoading(false)
     })()
 
-    const sub = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const user = session?.user
-      setEmail(user?.email ?? null)
-
-      if (user?.email) {
-        await supabase.from('users').upsert(
-          { id: user.id, email: user.email },
-          { onConflict: 'id' }
-        )
-      }
-    })
-
+    // listener de auth (opcional)
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {})
     return () => {
       mounted = false
-      sub.data.subscription.unsubscribe()
+      authListener.subscription.unsubscribe()
     }
   }, [])
 
-  async function saveName() {
-    if (!email || !name) return
-    const { data, error } = await supabase
-      .from('users')
-      .update({ name })
-      .eq('email', email)
+  // 2) Salva/atualiza nome
+  const saveName = async () => {
+    if (!email) return alert('Você precisa estar logada.')
+    try {
+      // upsert por email (RLS já criada com check por email)
+      const { error } = await supabase
+        .from('users')
+        .upsert({ email, name }, { onConflict: 'email' })
 
-    if (error) alert('Erro ao salvar nome 😢')
-    else alert('Nome salvo com sucesso! 🎉')
+      if (error) throw error
+      alert('Nome salvo com sucesso! 🎉')
+    } catch (e: any) {
+      alert('Erro ao salvar: ' + (e?.message ?? 'desconhecido'))
+    }
   }
 
-  async function signOut() {
+  const signOut = async () => {
     await supabase.auth.signOut()
-    location.reload()
+    window.location.href = '/' // volta pra home
+  }
+
+  if (loading) {
+    return <main style={{ padding: 24 }}>Carregando…</main>
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: '40px auto', padding: 24 }}>
-      <h1>Autenticação</h1>
+    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
+      <h2>Autenticação</h2>
 
-      {!email && (
-        <Auth
-          supabaseClient={supabase}
-          providers={[]}
-          appearance={{ theme: ThemeSupa }}
-          localization={{
-            variables: {
-              sign_in: { email_label: 'E-mail', password_label: 'Senha' },
-              sign_up: { email_label: 'E-mail', password_label: 'Senha' }
-            }
-          }}
-        />
-      )}
-
-      {email && (
-        <section style={{ marginTop: 24 }}>
-          <p>Você está logada.</p>
+      {email ? (
+        <>
+          <p><strong>Você está logada.</strong></p>
           <p><strong>E-mail:</strong> {email}</p>
 
-          <p style={{ marginTop: 24 }}>Seu nome (opcional):</p>
+          <p style={{ marginTop: 20 }}>Seu nome (opcional):</p>
           <input
-            placeholder="Ex.: Liana"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{ padding: 8, width: '100%', marginBottom: 8 }}
+            placeholder="Ex.: Liana"
+            style={{ padding: 8, width: '100%', maxWidth: 320 }}
           />
-          <button onClick={saveName}>Salvar nome</button>
+          <div style={{ marginTop: 12 }}>
+            <button onClick={saveName} style={{ padding: '8px 16px' }}>
+              Salvar nome
+            </button>
+          </div>
 
           <div style={{ marginTop: 24 }}>
-            <button onClick={signOut}>Sair</button>
+            <Link href="/">← Voltar para a Home</Link>
           </div>
-        </section>
+
+          <div style={{ marginTop: 16 }}>
+            <button onClick={signOut} style={{ padding: '8px 16px' }}>
+              Sair
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <p>Você não está logada.</p>
+          <Link href="/">← Voltar para a Home</Link>
+        </>
       )}
     </main>
   )
 }
+  
