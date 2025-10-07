@@ -1,31 +1,47 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { supabase } from './lib/supabaseClient'
 import Link from 'next/link'
 
 export default function HomePage() {
+  const [name, setName] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      const user = data.user
+      if (user?.email) {
+        setEmail(user.email)
+        const { data: userData } = await supabase
+          .from('users')
+          .select('name')
+          .eq('email', user.email)
+          .single()
+        setName(userData?.name ?? null)
+      }
+    }
+
+    fetchUser()
+  }, [])
+
   return (
-    <main style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      fontFamily: 'Arial, sans-serif',
-      textAlign: 'center'
-    }}>
+    <main style={{ textAlign: 'center', padding: 40 }}>
       <h1>🌟 App Indecisos 🌟</h1>
-      <p>Bem-vinda, Liana! Este é o começo do seu app 😉</p>
+
+      {name ? (
+        <p style={{ marginTop: 16 }}>Bem-vinda de volta, <strong>{name}</strong>! 😄</p>
+      ) : email ? (
+        <p style={{ marginTop: 16 }}>Bem-vinda! 💫</p>
+      ) : (
+        <p style={{ marginTop: 16 }}>Bem-vinda ao seu app! 💫</p>
+      )}
+
+      <p style={{ marginTop: 8 }}>Este é o começo do seu app ✨</p>
+
       <Link href="/auth">
-        <button style={{
-          marginTop: '20px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          borderRadius: '6px',
-          backgroundColor: '#0070f3',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer'
-        }}>
+        <button style={{ marginTop: 24, padding: '10px 20px' }}>
           Entrar / Cadastrar
         </button>
       </Link>
