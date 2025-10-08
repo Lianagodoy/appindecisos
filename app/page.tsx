@@ -8,6 +8,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState<string | null>(null)
   const [name, setName] = useState<string>('')
+  const prettyName = name
+    ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
+    : ''
 
   useEffect(() => {
     let mounted = true
@@ -67,7 +70,7 @@ export default function Home() {
       {email ? (
         <>
           <p style={{ marginTop: 8 }}>
-            Bem-vinda, <strong>{name || 'visitante'}</strong>!
+            <strong>{prettyName || 'visitante'}</strong>
           </p>
           <div style={{ marginTop: 20 }}>
             <Link href="/auth">
