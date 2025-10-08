@@ -15,28 +15,36 @@ export default function AuthPage() {
     let mounted = true
 
     ;(async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData?.user
-      if (!mounted) return
+      try {
+        const { data: userData } = await supabase.auth.getUser()
+        const user = userData?.user
 
-      if (user?.email) {
-        setEmail(user.email)
-        const { data } = await supabase
-          .from('users')
-          .select('name')
-          .eq('email', user.email)
-          .single()
+        if (!mounted) return
 
-        if (data?.name) setName(data.name)
+        if (user?.email) {
+          setEmail(user.email)
+
+          const { data } = await supabase
+            .from('users')
+            .select('name')
+            .eq('email', user.email)
+            .single()
+
+          if (data?.name) setName(data.name)
+        }
+      } finally {
+        // garante que o spinner pare mesmo se algo falhar
+        if (mounted) setLoading(false)
       }
-
-      setLoading(false)
     })()
 
+    // ⚠ Recarrega a página só quando SIGNED_IN ou SIGNED_OUT
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      window.location.reload()
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        window.location.reload()
+      }
     })
 
     return () => {
@@ -130,6 +138,6 @@ export default function AuthPage() {
       ) : (
         <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
       )}
-    </main>
-  )
+    </main>
+  )
 }
