@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Auth } from '@supabase/auth-ui-react'
+import { ThemeSupa } from '@supabase/auth-ui-shared'
 import { supabase } from '../../lib/supabaseClient'
 
 export default function AuthPage() {
@@ -9,99 +10,87 @@ export default function AuthPage() {
   const [email, setEmail] = useState<string | null>(null)
   const [name, setName] = useState<string>('')
   const [saved, setSaved] = useState(false)
-  
+
   useEffect(() => {
     let mounted = true
 
     ;(async () => {
       const { data: userData } = await supabase.auth.getUser()
-      const user = userData.user
+      const user = userData?.user
       if (!mounted) return
 
-      setEmail(user?.email ?? null)
-
       if (user?.email) {
+        setEmail(user.email)
         const { data } = await supabase
           .from('users')
           .select('name')
           .eq('email', user.email)
           .single()
-        setName(data?.name ?? '')
+
+        if (data?.name) setName(data.name)
       }
 
       setLoading(false)
     })()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData.user
-      setEmail(user?.email ?? null)
-
-      if (user?.email) {
-        const { data } = await supabase
-          .from('users')
-          .select('name')
-          .eq('email', user.email)
-          .single()
-        setName(data?.name ?? '')
-      } else {
-        setName('')
-      }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      window.location.reload()
     })
 
     return () => {
-      listener.subscription.unsubscribe()
+      subscription.unsubscribe()
       mounted = false
     }
   }, [])
 
-  const salvarNome = async () => {
-  if (!name?.trim()) return
-  setLoading(true)
-  try {
-    const { data: userData } = await supabase.auth.getUser()
-    const email = userData?.user?.email
-    if (!email) return
+  async function salvarNome() {
+    if (!email) return alert('Você precisa estar logada para salvar o nome.')
 
-    const { error } = await supabase
-      .from('users')
-      .update({ name })
-      .eq('email', email)
+    const { error } = await supabase.from('users').update({ name }).eq('email', email)
 
-    if (!error) {
+    if (error) {
+      console.error(error)
+      alert('Erro ao salvar o nome 😢')
+    } else {
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      alert('Nome salvo com sucesso! 🎉')
     }
-  } finally {
-    setLoading(false)
   }
-}
+
   async function signOut() {
     await supabase.auth.signOut()
     setEmail(null)
-    setName('')
   }
 
-  if (loading) return <p style={{ padding: 24 }}>Carregando...</p>
+  if (loading) return <p>Carregando...</p>
 
   return (
-    <main style={{ maxWidth: 640, margin: '0 auto', padding: 24 }}>
-      <h2 style={{ marginBottom: 16 }}>Autenticação</h2>
+    <main style={{ padding: 20, maxWidth: 480, margin: 'auto', fontFamily: 'sans-serif' }}>
+      <h2>Autenticação</h2>
 
       {email ? (
         <>
-          <p style={{ lineHeight: 1.6 }}>
+          <p>
             Você está logada. <br />
             <strong>E-mail:</strong> {email}
           </p>
 
-          <div style={{ marginTop: 20 }}>
-            <label style={{ display: 'block', marginBottom: 6 }}>Seu nome (opcional):</label>
+          <div>
+            <p>Seu nome (opcional):</p>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ padding: 10, width: '100%', maxWidth: 360, border: '1px solid #ddd', borderRadius: 6 }}
+              placeholder="Ex.: Liana"
+              style={{
+                padding: 10,
+                width: '100%',
+                maxWidth: 360,
+                border: '1px solid #ccc',
+                borderRadius: 6,
+              }}
             />
             <button
               onClick={salvarNome}
@@ -119,40 +108,28 @@ export default function AuthPage() {
             </button>
           </div>
 
-          <a
-            href="/"
-            style={{
-              display: 'inline-block',
-              marginTop: 24,
-              padding: '12px 18px',
-              background: '#111',
-              color: '#fff',
-              borderRadius: 8,
-              textDecoration: 'none',
-              fontWeight: 600,
-            }}
-          >
+          <a href="/" style={{ display: 'block', marginTop: 16 }}>
             ← Voltar para a Home
           </a>
 
-          <div>
-            <button
-              onClick={signOut}
-              style={{
-                marginTop: 16,
-                background: 'transparent',
-                border: 'none',
-                color: '#d00',
-                cursor: 'pointer',
-              }}
-            >
-              Sair
-            </button>
-          </div>
+          <button
+            onClick={signOut}
+            style={{
+              marginTop: 10,
+              padding: '8px 14px',
+              background: '#555',
+              color: 'white',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+            }}
+          >
+            Sair
+          </button>
         </>
       ) : (
-        <Auth supabaseClient={supabase} appearance={{ theme: 'default' }} />
+        <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
       )}
-    </main>
-  )
+    </main>
+  )
 }
