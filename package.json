@@ -13,5 +13,13 @@
     "react-dom": "19.1.0",
     "@supabase/supabase-js": "^2.45.0",
     "@supabase/auth-ui-react": "^0.4.7"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13",
+    "postcss": "^8.4.41",
+    "autoprefixer": "^10.4.20"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
