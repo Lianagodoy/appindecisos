@@ -1,143 +1,56 @@
-'use client'
+// app/auth/page.tsx
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Auth } from '@supabase/auth-ui-react'
-import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { supabase } from '../../lib/supabaseClient'
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { createClient } from "@supabase/supabase-js";
+
+// Se você já tem lib/supabaseClient.ts com o cliente pronto,
+// pode importar de lá. Ex.: import { supabase } from "@/lib/supabaseClient"
+// Aqui deixo inline para funcionar imediatamente.
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+);
 
 export default function AuthPage() {
-  const [loading, setLoading] = useState(true)
-  const [email, setEmail] = useState<string | null>(null)
-  const [name, setName] = useState<string>('')
-  const [saved, setSaved] = useState(false)
+  const params = useSearchParams();
+  const mode = params.get("mode"); // "signup" | "signin" | null
 
-  useEffect(() => {
-    let mounted = true
-
-    ;(async () => {
-      try {
-        const { data: userData } = await supabase.auth.getUser()
-        const user = userData?.user
-
-        if (!mounted) return
-
-        if (user?.email) {
-          setEmail(user.email)
-
-          const { data } = await supabase
-            .from('users')
-            .select('name')
-            .eq('email', user.email)
-            .single()
-
-          if (data?.name) setName(data.name)
-        }
-      } finally {
-        // garante que o spinner pare mesmo se algo falhar
-        if (mounted) setLoading(false)
-      }
-    })()
-
-    // ⚠ Recarrega a página só quando SIGNED_IN ou SIGNED_OUT
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        window.location.reload()
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-      mounted = false
-    }
-  }, [])
-
-  async function salvarNome() {
-    if (!email) return alert('Você precisa estar logada para salvar o nome.')
-
-    const { error } = await supabase.from('users').update({ name }).eq('email', email)
-
-    if (error) {
-      console.error(error)
-      alert('Erro ao salvar o nome 😢')
-    } else {
-      setSaved(true)
-      alert('Nome salvo com sucesso! 🎉')
-    }
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    setEmail(null)
-  }
-
-  if (loading) return <p>Carregando...</p>
+  const view = useMemo<"sign_in" | "sign_up">(() => {
+    return mode === "signup" ? "sign_up" : "sign_in";
+  }, [mode]);
 
   return (
-    <main style={{ padding: 20, maxWidth: 480, margin: 'auto', fontFamily: 'sans-serif' }}>
-      <h2>Autenticação</h2>
+    <main className="min-h-dvh flex flex-col items-center px-6 py-10">
+      <h1 className="text-2xl font-bold text-blue-700 mb-6">
+        {view === "sign_up" ? "Criar conta" : "Entrar"}
+      </h1>
 
-      {email ? (
-        <>
-          <p>
-            Você está logada. <br />
-            <strong>E-mail:</strong> {email}
-          </p>
-
-          <div>
-            <p>Seu nome (opcional):</p>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Ex.: Liana"
-              style={{
-                padding: 10,
-                width: '100%',
-                maxWidth: 360,
-                border: '1px solid #ccc',
-                borderRadius: 6,
-              }}
-            />
-            <button
-              onClick={salvarNome}
-              style={{
-                marginTop: 10,
-                padding: '10px 16px',
-                background: '#0070f3',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-              }}
-            >
-              Salvar nome
-            </button>
-          </div>
-
-          <a href="/" style={{ display: 'block', marginTop: 16 }}>
-            ← Voltar para a Home
-          </a>
-
-          <button
-            onClick={signOut}
-            style={{
-              marginTop: 10,
-              padding: '8px 14px',
-              background: '#555',
-              color: 'white',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            Sair
-          </button>
-        </>
-      ) : (
-        <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />
-      )}
-    </main>
-  )
+      <div className="w-full max-w-sm">
+        <Auth
+          supabaseClient={supabase}
+          view={view}
+          appearance={{ theme: ThemeSupa }}
+          providers={[]}
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: "E-mail",
+                password_label: "Senha",
+                button_label: "Entrar",
+              },
+              sign_up: {
+                email_label: "E-mail",
+                password_label: "Senha",
+                button_label: "Criar conta",
+              },
+            },
+          }}
+        />
+      </div>
+    </main>
+  );
 }
