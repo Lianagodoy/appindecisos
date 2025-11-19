@@ -1,98 +1,37 @@
-'use client'
-
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+// app/page.tsx
+import Link from "next/link";
 
 export default function Home() {
-  const [loading, setLoading] = useState(true)
-  const [email, setEmail] = useState<string | null>(null)
-  const [name, setName] = useState<string>('')
-  const prettyName = name
-    ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()
-    : ''
-
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData.user
-      if (!mounted) return
-
-      if (user?.email) {
-        setEmail(user.email)
-
-        // busca nome na tabela users
-        const { data } = await supabase
-          .from('users')
-          .select('name')
-          .eq('email', user.email)
-          .single()
-
-        if (data?.name) setName(data.name)
-      }
-
-      setLoading(false)
-    })()
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async () => {
-      // simples “refresh” de estado quando loga/desloga
-      const { data: userData } = await supabase.auth.getUser()
-      const user = userData.user
-      setEmail(user?.email ?? null)
-
-      if (user?.email) {
-        const { data } = await supabase
-          .from('users')
-          .select('name')
-          .eq('email', user.email)
-          .single()
-        setName(data?.name ?? '')
-      } else {
-        setName('')
-      }
-    })
-
-    return () => {
-      listener.subscription.unsubscribe()
-      mounted = false
-    }
-  }, [])
-
-  if (loading) {
-    return <main style={{ padding: 24 }}>Carregando…</main>
-  }
-
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24, textAlign: 'center' }}>
-      <h1>🌼 App Indecisos 🌼</h1>
+    <main className="min-h-dvh flex flex-col items-center justify-start gap-8 px-6 py-10">
+      <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-blue-700">
+        Decida com IA!
+      </h1>
 
-      {email ? (
-        <>
-          <p style={{ marginTop: 8 }}>
-            <strong>{prettyName || 'visitante'}</strong>
-          </p>
-          <div style={{ marginTop: 20 }}>
-            <Link href="/auth">
-              <button style={{ padding: '10px 18px' }}>
-                Ir para minha conta (salvar/editar nome)
-              </button>
-            </Link>
-          </div>
-          <div style={{ marginTop: 12, opacity: 0.7 }}>
-            <small>E-mail: {email}</small>
-          </div>
-        </>
-      ) : (
-        <>
-          <p style={{ marginTop: 8 }}>Este é o começo do seu app 😉</p>
-          <div style={{ marginTop: 20 }}>
-            <Link href="/auth">
-              <button style={{ padding: '10px 18px' }}>Entrar / Cadastrar</button>
-            </Link>
-          </div>
-        </>
-      )}
-    </main>
-  )
+      <p className="max-w-xs text-center text-blue-800/90 leading-relaxed">
+        O app que vai além do &quot;sim ou não&quot; — descubra, simule e
+        decida com IA!
+      </p>
+
+      <div className="mt-6 w-full max-w-xs space-y-4">
+        <Link
+          href="/auth?mode=signup"
+          className="block w-full rounded-lg px-4 py-3 text-center font-semibold text-blue-800 shadow
+                     bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400 active:scale-[0.99]"
+        >
+          Cadastrar login e senha
+        </Link>
+
+        <div className="text-center text-blue-800 font-semibold">Ou...</div>
+
+        <Link
+          href="/auth?mode=signin"
+          className="block w-full rounded-lg px-4 py-3 text-center font-semibold text-blue-800 shadow
+                     bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400 active:scale-[0.99]"
+        >
+          Já tenho uma conta
+        </Link>
+      </div>
+    </main>
+  );
 }
