@@ -19,7 +19,9 @@
     "postcss": "^8.4.41",
     "autoprefixer": "^10.4.20",
     "typescript": "^5.6.3",
-    "@types/node": "^22.7.5"
+    "@types/node": "^22.7.5",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2"
   },
   "engines": {
     "node": "22.x"
