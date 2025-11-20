@@ -1,42 +1,88 @@
-'use client'
+// app/decisoes/page.tsx
+"use client";
 
-import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabaseClient'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function DecisoesPage() {
-  const [email, setEmail] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string>(""); // nome ou e-mail
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true
-
-    // pega sessão atual
+    let mounted = true;
     supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return
-      setEmail(data.user?.email ?? null)
-    })
-
-    // escuta mudanças de autenticação
-    const { data: listener } = supabase.auth.onAuthStateChange((_evt, session) => {
-      if (!mounted) return
-      setEmail(session?.user?.email ?? null)
-    })
-
+      if (!mounted) return;
+      const user = data.user;
+      if (!user) {
+        window.location.href = "/auth?mode=signin";
+        return;
+      }
+      const name =
+        (user.user_metadata && (user.user_metadata.name as string)) || "";
+      setDisplayName(name || user.email || "Usuário");
+      setLoading(false);
+    });
     return () => {
-      mounted = false
-      listener.subscription.unsubscribe()
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
+  if (loading) {
+    return (
+      <main className="min-h-dvh flex items-center justify-center">
+        <span className="text-blue-700 font-semibold">Carregando…</span>
+      </main>
+    );
+  }
 
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: 24 }}>
-      <h1>🌼 Minhas Decisões</h1>
-      <p style={{ marginTop: 8, opacity: 0.8 }}>
-        {email ? `Logada como: ${email}` : 'Carregando…'}
-      </p>
+    <main className="min-h-dvh px-6 py-8">
+      <div className="border border-blue-300 rounded p-3 inline-block">
+        <h1 className="text-xl font-bold text-blue-700">
+          Bem-vindo, {displayName}!
+        </h1>
+      </div>
 
-      <div style={{ marginTop: 24 }}>
-        <p>(Aqui vai o conteúdo da próxima tela. Por enquanto é só um esqueleto.)</p>
+      <h2 className="mt-8 mb-4 text-center text-blue-700 font-bold">
+        Escolha o Tema
+      </h2>
+
+      <div className="mx-auto max-w-xs space-y-4">
+        {[
+          "Gastronomia",
+          "Viagens e Turismo",
+          "Conquistas Profissionais",
+          "Filmes e Séries",
+          "Rotina Inteligente",
+          "Vida Social e Pessoal",
+        ].map((label) => (
+          <button
+            key={label}
+            className="w-full rounded-lg px-4 py-3 text-center font-semibold text-blue-800 shadow
+                       bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400 active:scale-[0.99]"
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-8 space-x-3">
+        <button
+          onClick={signOut}
+          className="rounded-lg px-4 py-2 bg-slate-200 hover:bg-slate-300"
+        >
+          Sair
+        </button>
+        <Link href="/" className="rounded-lg px-4 py-2 bg-blue-600 text-white">
+          Voltar à inicial
+        </Link>
       </div>
     </main>
-  )
+  );
 }
