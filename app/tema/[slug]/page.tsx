@@ -8,22 +8,109 @@ import { supabase } from "@/lib/supabaseClient";
 
 const KEYWORDS: Record<string, string[]> = {
   gastronomia: [
-    "comida","restaurante","cozinhar","receita","prato","ingrediente","cardápio","culinária","jantar","almoço","sobremesa","drink","vinho"
+    "comida",
+    "restaurante",
+    "cozinhar",
+    "receita",
+    "prato",
+    "ingrediente",
+    "cardápio",
+    "culinária",
+    "jantar",
+    "café da manhã",
+    "lanche",
+    "almoço",
+    "sobremesa",
+    "drink",
+    "vinho",
+    "gostoso",
+    "filé",
+    "peixe",
+    "frango",
+    "porco"
+    "carne",
+    "massa",
+    "temperar",
   ],
   viagens: [
-    "viagem","turismo","hotel","passagem","avião","destino","roteiro","praia","montanha","mala","hospedagem","tour","passeio","resort"
+    "viagem",
+    "turismo",
+    "hotel",
+    "passagem",
+    "avião",
+    "destino",
+    "roteiro",
+    "praia",
+    "montanha",
+    "mala",
+    "hospedagem",
+    "tour",
+    "passeio",
+    "resort",
+    "cidade",
+    "país",
   ],
   profissional: [
-    "trabalho","carreira","emprego","vaga","estágio","salário","promoção","portfólio","currículo","negócio","freelancer","startup","cliente"
+    "trabalho",
+    "carreira",
+    "emprego",
+    "vaga",
+    "estágio",
+    "salário",
+    "promoção",
+    "portfólio",
+    "currículo",
+    "negócio",
+    "freelancer",
+    "startup",
+    "cliente",
   ],
   audiovisual: [
-    "filme","série","cinema","netflix","documentário","episódio","elenco","diretor","temporada","streaming","maratonar","roteiro"
+    "filme",
+    "série",
+    "cinema",
+    "netflix",
+    "documentário",
+    "episódio",
+    "elenco",
+    "diretor",
+    "temporada",
+    "streaming",
+    "maratonar",
+    "roteiro",
   ],
   rotina: [
-    "rotina","hábitos","produtividade","organização","agenda","saúde","dormir","exercício","dieta","estudo","foco","app","notificação"
+    "rotina",
+    "hábito",
+    "hábitos",
+    "produtividade",
+    "organização",
+    "agenda",
+    "saúde",
+    "dormir",
+    "sono",
+    "exercício",
+    "atividade física",
+    "dieta",
+    "estudo",
+    "foco",
+    "app",
+    "notificação",
   ],
   social: [
-    "amizade","encontro","festa","aniversário","namoro","família","parceria","convite","evento","rede social","mensagem","conviver"
+    "amizade",
+    "amigos",
+    "encontro",
+    "festa",
+    "aniversário",
+    "namoro",
+    "família",
+    "parceria",
+    "convite",
+    "evento",
+    "rede social",
+    "mensagem",
+    "conviver",
   ],
 };
 
@@ -68,25 +155,13 @@ export default function TemaPage() {
     );
   }
 
-  const validateByKeywords = (text: string) => {
-    const t = text.toLowerCase();
-    return keywords.some((k) => t.includes(k));
-  };
-
   const askAI = async () => {
     setError(null);
     setAnswer(null);
 
-    if (question.trim().length < 8) {
-      setError("Escreva sua pergunta com pelo menos 8 caracteres.");
-      return;
-    }
-    if (!validateByKeywords(question)) {
-      setError(
-        `Sua pergunta precisa mencionar o tema "${LABELS[slug]}". Dica: use palavras como: ${keywords
-          .slice(0, 6)
-          .join(", ")}…`
-      );
+    const text = question.trim();
+    if (text.length < 5) {
+      setError("Escreva sua pergunta com um pouco mais de detalhes.");
       return;
     }
 
@@ -97,13 +172,13 @@ export default function TemaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: LABELS[slug],
-          question,
+          question: text,
           name: userName,
         }),
       });
       if (!res.ok) {
-        const t = await res.text();
-        throw new Error(t || "Erro ao falar com a IA.");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || "Erro ao falar com a IA.");
       }
       const data = await res.json();
       setAnswer(data.answer);
@@ -126,8 +201,14 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Dica: o texto deve conter palavras do tema. Por exemplo:{" "}
-        <em>{keywords.slice(0, 5).join(", ")}</em>.
+        Dica: o texto deve falar sobre {LABELS[slug].toLowerCase()}.
+        {keywords.length > 0 && (
+          <>
+            {" "}
+            Por exemplo:{" "}
+            <em>{keywords.slice(0, 5).join(", ")}…</em>
+          </>
+        )}
       </p>
 
       <div className="mt-5 space-y-3 max-w-xl">
@@ -154,7 +235,7 @@ export default function TemaPage() {
           <h2 className="text-blue-700 font-bold mb-2">Mini-história</h2>
           <div className="whitespace-pre-wrap leading-relaxed">{answer}</div>
 
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex gap-2 flex-wrap">
             <button className="rounded px-3 py-2 bg-green-600 text-white">
               Gostei!
             </button>
