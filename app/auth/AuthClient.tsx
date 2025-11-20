@@ -7,6 +7,10 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/lib/supabaseClient";
 
+const siteURL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "");
+
 export default function AuthClient() {
   const params = useSearchParams();
   const router = useRouter();
@@ -36,7 +40,7 @@ export default function AuthClient() {
     return <SignUpWithName />;
   }
 
-  // Sign in – mantém o Auth UI pronto
+  // Sign in – com link "Forgot password?" funcionando (redirect para /auth/reset)
   return (
     <main className="min-h-dvh flex flex-col items-center px-6 py-10">
       <h1 className="text-2xl font-bold text-blue-700 mb-6">Entrar</h1>
@@ -46,6 +50,7 @@ export default function AuthClient() {
           view="sign_in"
           appearance={{ theme: ThemeSupa }}
           providers={[]}
+          redirectTo={`${siteURL}/auth/reset`}
           localization={{
             variables: {
               sign_in: {
@@ -83,26 +88,18 @@ function SignUpWithName() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { name: name.trim() }, // salva no user_metadata.name
-      },
+      options: { data: { name: name.trim() } },
     });
     setLoading(false);
 
-    if (error) {
-      setErr(error.message);
-      return;
-    }
+    if (error) return setErr(error.message);
 
-    // Dependendo da política do projeto, pode exigir confirmação por e-mail
     if (!data.session) {
       setMsg(
-        "Cadastro criado! Verifique seu e-mail para confirmar a conta. Após confirmar, volte e faça login."
+        "Cadastro criado! Verifique seu e-mail para confirmar a conta. Depois volte e faça login."
       );
       return;
     }
-
-    // Se já logou, segue para Decisões
     router.replace("/decisoes");
   };
 
@@ -124,7 +121,6 @@ function SignUpWithName() {
             required
           />
         </div>
-
         <div className="space-y-1">
           <label className="text-sm font-medium text-slate-700">E-mail</label>
           <input
@@ -136,7 +132,6 @@ function SignUpWithName() {
             required
           />
         </div>
-
         <div className="space-y-1">
           <label className="text-sm font-medium text-slate-700">Senha</label>
           <input
