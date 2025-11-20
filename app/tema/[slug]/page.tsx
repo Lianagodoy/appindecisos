@@ -6,114 +6,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-const KEYWORDS: Record<string, string[]> = {
-  gastronomia: [
-    "comida",
-    "restaurante",
-    "cozinhar",
-    "receita",
-    "prato",
-    "ingrediente",
-    "cardápio",
-    "culinária",
-    "jantar",
-    "café da manhã",
-    "lanche",
-    "almoço",
-    "sobremesa",
-    "drink",
-    "vinho",
-    "gostoso",
-    "filé",
-    "peixe",
-    "frango",
-    "porco"
-    "carne",
-    "massa",
-    "temperar",
-  ],
-  viagens: [
-    "viagem",
-    "turismo",
-    "hotel",
-    "passagem",
-    "avião",
-    "destino",
-    "roteiro",
-    "praia",
-    "montanha",
-    "mala",
-    "hospedagem",
-    "tour",
-    "passeio",
-    "resort",
-    "cidade",
-    "país",
-  ],
-  profissional: [
-    "trabalho",
-    "carreira",
-    "emprego",
-    "vaga",
-    "estágio",
-    "salário",
-    "promoção",
-    "portfólio",
-    "currículo",
-    "negócio",
-    "freelancer",
-    "startup",
-    "cliente",
-  ],
-  audiovisual: [
-    "filme",
-    "série",
-    "cinema",
-    "netflix",
-    "documentário",
-    "episódio",
-    "elenco",
-    "diretor",
-    "temporada",
-    "streaming",
-    "maratonar",
-    "roteiro",
-  ],
-  rotina: [
-    "rotina",
-    "hábito",
-    "hábitos",
-    "produtividade",
-    "organização",
-    "agenda",
-    "saúde",
-    "dormir",
-    "sono",
-    "exercício",
-    "atividade física",
-    "dieta",
-    "estudo",
-    "foco",
-    "app",
-    "notificação",
-  ],
-  social: [
-    "amizade",
-    "amigos",
-    "encontro",
-    "festa",
-    "aniversário",
-    "namoro",
-    "família",
-    "parceria",
-    "convite",
-    "evento",
-    "rede social",
-    "mensagem",
-    "conviver",
-  ],
-};
-
 const LABELS: Record<string, string> = {
   gastronomia: "Gastronomia",
   viagens: "Viagens e Turismo",
@@ -122,6 +14,8 @@ const LABELS: Record<string, string> = {
   rotina: "Rotina Inteligente",
   social: "Vida Social e Pessoal",
 };
+
+type Mode = "normal" | "genios" | "historia" | "amigos";
 
 export default function TemaPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -132,10 +26,8 @@ export default function TemaPage() {
   const [userName, setUserName] = useState<string>("");
 
   const temaValido = useMemo(() => LABELS[slug], [slug]);
-  const keywords = useMemo(() => KEYWORDS[slug] ?? [], [slug]);
 
   useEffect(() => {
-    // pega nome para enriquecer o prompt
     supabase.auth.getUser().then(({ data }) => {
       const n = (data.user?.user_metadata?.name as string) || "";
       setUserName(n);
@@ -155,7 +47,7 @@ export default function TemaPage() {
     );
   }
 
-  const askAI = async () => {
+  const callAI = async (mode: Mode) => {
     setError(null);
     setAnswer(null);
 
@@ -171,15 +63,18 @@ export default function TemaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          theme: LABELS[slug],
+          theme: temaValido,
           question: text,
           name: userName,
+          mode,
         }),
       });
+
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error || "Erro ao falar com a IA.");
       }
+
       const data = await res.json();
       setAnswer(data.answer);
     } catch (e: any) {
@@ -193,7 +88,7 @@ export default function TemaPage() {
     <main className="min-h-dvh px-6 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-blue-700">
-          Tema: {LABELS[slug]}
+          Tema: {temaValido}
         </h1>
         <Link href="/decisoes" className="text-blue-700 underline">
           Trocar tema
@@ -201,56 +96,65 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Dica: o texto deve falar sobre {LABELS[slug].toLowerCase()}.
-        {keywords.length > 0 && (
-          <>
-            {" "}
-            Por exemplo:{" "}
-            <em>{keywords.slice(0, 5).join(", ")}…</em>
-          </>
-        )}
+        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te ajudar
+        a decidir.
       </p>
 
       <div className="mt-5 space-y-3 max-w-xl">
         <textarea
           className="w-full min-h-28 rounded border px-3 py-2 outline-none focus:ring"
-          placeholder={`Escreva sua pergunta sobre ${LABELS[slug]}…`}
+          placeholder={`Escreva sua pergunta sobre ${temaValido}…`}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
-          onClick={askAI}
+          onClick={() => callAI("normal")}
           disabled={sending}
           className="rounded-lg px-4 py-2 font-semibold text-blue-800 shadow
                      bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
                      disabled:opacity-60"
         >
-          {sending ? "Gerando mini-história…" : "Enviar"}
+          {sending ? "Gerando resposta…" : "Enviar"}
         </button>
       </div>
 
       {answer && (
         <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-4 bg-white">
-          <h2 className="text-blue-700 font-bold mb-2">Mini-história</h2>
+          <h2 className="text-blue-700 font-bold mb-2">Resposta</h2>
           <div className="whitespace-pre-wrap leading-relaxed">{answer}</div>
 
           <div className="mt-4 flex gap-2 flex-wrap">
             <button className="rounded px-3 py-2 bg-green-600 text-white">
               Gostei!
             </button>
+
             <button
-              onClick={askAI}
-              className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300"
+              onClick={() => callAI("normal")}
+              disabled={sending}
+              className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
             >
               Sugira algo diferente
             </button>
-            <button className="rounded px-3 py-2 bg-blue-600 text-white">
+
+            <button
+              onClick={() => callAI("genios")}
+              disabled={sending}
+              className="rounded px-3 py-2 bg-blue-600 text-white disabled:opacity-60"
+            >
               Perguntar aos gênios
             </button>
-            <button className="rounded px-3 py-2 bg-purple-600 text-white">
+
+            <button
+              onClick={() => callAI("amigos")}
+              disabled={sending}
+              className="rounded px-3 py-2 bg-purple-600 text-white disabled:opacity-60"
+            >
               Opinião dos amigos
             </button>
+
+            {/* se quiser, depois adicionamos um botão específico só para mini-história */}
+            {/* <button onClick={() => callAI("historia")} ...>Mini-história</button> */}
           </div>
         </section>
       )}
