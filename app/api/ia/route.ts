@@ -1,19 +1,52 @@
 // app/api/ia/route.ts
 export const runtime = "nodejs";
 
-type Mode = "normal" | "genios" | "historia" | "amigos";
-
 type Body = {
   theme: string;
   question: string;
   name?: string;
-  mode?: Mode;
+  mode?: "normal" | "genios" | "historia" | "amigos";
 };
+
+// Palavras super abrangentes por tema
+const KEYWORDS: Record<string, string[]> = {
+  "Gastronomia": [
+    "comida","cozinhar","receita","prato","forno","fritar","assar",
+    "restaurante","jantar","almoço","sobremesa","ingrediente","doces",
+    "salada","carne","massa","sushi","pasta","macarrão","culinária",
+    "bebida","vinho","hambúrguer","pizza","tempero","chef"
+  ],
+  "Viagens e Turismo": [
+    "viagem","turismo","hotel","avião","passagem","destino","praia",
+    "montanha","roteiro","trilha","hospedagem","resort","mochila",
+    "passaporte","bagagem","turista","cidade","cultura"
+  ],
+  "Conquistas Profissionais": [
+    "trabalho","carreira","profissão","emprego","currículo",
+    "entrevista","promoção","salário","gestão","empresa","networking",
+    "negócio","objetivo","produtividade"
+  ],
+  "Filmes e Séries": [
+    "filme","série","cinema","ator","atriz","netflix","documentário",
+    "temporada","episódio","streaming","ação","drama","comédia",
+    "terror","investigação","policial"
+  ],
+  "Rotina Inteligente": [
+    "organização","rotina","hábitos","produtividade","agenda",
+    "saúde","academia","treino","estudo","planejamento","meditação",
+    "aplicativo","controle","tempo"
+  ],
+  "Vida Social e Pessoal": [
+    "amizade","relacionamento","namoro","família","convite","aniversário",
+    "decisão pessoal","vida social","encontro","conversa","evento"
+  ]
+};
+
+// ----------------------------------------------------------
 
 export async function POST(req: Request) {
   try {
-    const { theme, question, name, mode = "normal" }: Body =
-      await req.json();
+    const { theme, question, name, mode }: Body = await req.json();
 
     if (!process.env.OPENAI_API_KEY) {
       return new Response(
@@ -22,65 +55,64 @@ export async function POST(req: Request) {
       );
     }
 
-    // --------- PROMPTS POR MODO --------- //
+    // --- DETECÇÃO FLEXÍVEL DO TEMA ---
+    const q = question.toLowerCase();
 
-    // Modo padrão: resposta direta, útil, sem historinha
-    const systemNormal = `
-Você é um assistente direto e gentil, ajudando o usuário a decidir algo no tema "${theme}".
-Regras:
-- Responda de forma clara, objetiva e prática.
-- Pode listar opções, prós e contras, passos, recomendações.
-- NÃO conte mini-histórias nem faça ficção.
-- Use um tom amigável, sem julgar a pergunta. Nunca diga que a dúvida é "boba" ou "burra".
-- Se perceber que a pergunta foge muito do tema, apenas comente isso com delicadeza
-  e sugira como a pessoa pode reformular, mas ainda assim tente ajudar um pouco.`;
+    const themeKeywords = KEYWORDS[theme] || [];
+    const match = themeKeywords.some((k) => q.includes(k));
 
-    // Modo "gênios": várias perspectivas inteligentes
-    const systemGenios = `
-Você vai responder como se fosse um painel de grandes gênios (Da Vinci, Einstein, Marie Curie, Tesla, etc.)
-comentando a decisão dentro do tema "${theme}".
-Regras:
-- Traga 2 a 4 perspectivas curtas, cada uma com 2–3 frases.
-- Cada perspectiva deve ter um estilo diferente (mais racional, mais criativo, mais prático…).
-- Continue sendo útil e aplicável na vida real, sem virar história longa.`;
+    // Só bloqueia se for MUITO fora do tema
+    if (!match) {
+      return Response.json({
+        answer: `Ops! Sua pergunta não parece ser sobre ${theme}.  
+Tente reformular usando alguma palavra relacionada ao tema.`
+      });
+    }
 
-    // Modo mini-história
-    const systemHistoria = `
-Você é um roteirista criativo.
-Crie uma mini-história envolvente (120–180 palavras) ligada ao tema "${theme}"
-e à pergunta do usuário.
-Regras:
-- Comece com um título curto.
-- Use 2–3 parágrafos.
-- No final, ofereça uma sugestão clara de decisão.
-- Tom leve, inspirador, mas ainda conectado à dúvida real do usuário.`;
+    // -------- SISTEMA: muda conforme o modo ---------
+    let system = "";
 
-    // Modo "amigos": três amigos dando opinião
-    const systemAmigos = `
-Responda como se fossem três amigos próximos conversando com o usuário sobre o tema "${theme}".
-Regras:
-- Use um tom leve, de WhatsApp: simples, direto, com carinho.
-- Estrutura:
-  - Amigo 1: mais racional e pé no chão.
-  - Amigo 2: mais divertido e espontâneo.
-  - Amigo 3: mais sensível/emocional.
-- Cada um com 2–3 frases.
-- Nada de história longa, é só papo de amigos tentando ajudar.`;
+    if (mode === "normal") {
+      system = `
+Você é um assistente objetivo e claro. Responda de forma prática,
+direta e útil sobre o tema "${theme}".
+Estilo: explicação simples + sugestão final.
+Sem fantasia, sem mini-história.`;
+    }
 
-    let system = systemNormal;
-    if (mode === "genios") system = systemGenios;
-    if (mode === "historia") system = systemHistoria;
-    if (mode === "amigos") system = systemAmigos;
+    if (mode === "genios") {
+      system = `
+Você é uma mistura de Da Vinci, Tesla e Einstein criando conselhos criativos.
+Use metáforas inteligentes, exemplos brilhantes e insights inesperados.
+Nada de história fofa — só genialidade aplicada ao tema "${theme}".`;
+    }
+
+    if (mode === "amigos") {
+      system = `
+Responda como um(a) amigo(a) sincero(a), leve, casual e bem humorado.
+Nada muito técnico. Como um papo real sobre o tema "${theme}".`;
+    }
+
+    if (mode === "historia") {
+      system = `
+Crie uma mini-história curta e envolvente (100–150 palavras)
+sobre a dúvida dentro do tema "${theme}".
+Somente neste modo você usa narrativa.`;
+    }
+
+    // fallback
+    if (!system) {
+      system = `
+Você é um assistente claro e objetivo. Responda de forma útil sobre o tema "${theme}".`;
+    }
 
     const userPrompt = `
-Nome do usuário: ${name || "não informado"}
-Tema selecionado: ${theme}
-Pergunta ou situação do usuário:
-"""${question}"""
-`.trim();
+Usuário: ${name || "sem nome"}
+Tema: ${theme}
+Pergunta: """${question}"""`
+      .trim();
 
-    // --------- CHAMADA PARA OPENAI --------- //
-
+    // -------- CHAMADA AO MODELO ---------
     const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -89,7 +121,7 @@ Pergunta ou situação do usuário:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        temperature: mode === "normal" ? 0.6 : 0.9,
+        temperature: 0.9,
         messages: [
           { role: "system", content: system },
           { role: "user", content: userPrompt },
@@ -99,20 +131,18 @@ Pergunta ou situação do usuário:
 
     if (!r.ok) {
       const text = await r.text();
-      return new Response(JSON.stringify({ error: text }), {
-        status: 500,
-      });
+      return new Response(JSON.stringify({ error: text }), { status: 500 });
     }
 
     const data = await r.json();
+
     const content =
       data.choices?.[0]?.message?.content?.trim() ||
-      "Não consegui gerar uma resposta agora.";
+      "Não consegui gerar resposta agora.";
 
     return Response.json({ answer: content });
+
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-    });
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
