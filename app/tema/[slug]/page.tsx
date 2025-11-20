@@ -1,3 +1,4 @@
+// app/tema/[slug]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -26,7 +27,7 @@ export default function TemaPage() {
   const [sending, setSending] = useState(false);
   const [userName, setUserName] = useState<string>("");
 
-  // quais botões especiais já foram usados
+  // controle dos botões especiais
   const [usedSuggestion, setUsedSuggestion] = useState(false);
   const [usedGenios, setUsedGenios] = useState(false);
   const [usedAmigos, setUsedAmigos] = useState(false);
@@ -52,6 +53,12 @@ export default function TemaPage() {
       </main>
     );
   }
+
+  const checkRedirect = (s: boolean, g: boolean, a: boolean) => {
+    if (s && g && a) {
+      router.push("/decisoes");
+    }
+  };
 
   const callAI = async (mode: Mode, onSuccess?: () => void) => {
     setError(null);
@@ -83,9 +90,7 @@ export default function TemaPage() {
       const data = await res.json();
       setAnswer(data.answer);
 
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
     } finally {
@@ -93,55 +98,46 @@ export default function TemaPage() {
     }
   };
 
-  // 🔘 Botão ENVIAR – só resposta normal, não conta como “usado”
+  // ENVIAR = resposta objetiva padrão
   const handleEnviar = () => {
     callAI("normal");
   };
 
-  // 🔘 Gostei! – volta pra tela decisões
+  // GOSTEI = volta para Tela Decisões
   const handleGostei = () => {
     router.push("/decisoes");
   };
 
-  // 🔘 Sugira algo diferente – usa IA 1x e trava botão
+  // SUGIRA ALGO DIFERENTE = mini-história, depois desativa
   const handleSugiraDiferente = () => {
-    callAI("normal", () => {
-      const alreadyGenios = usedGenios;
-      const alreadyAmigos = usedAmigos;
+    callAI("historia", () => {
+      const nextSug = true;
+      const nextGen = usedGenios;
+      const nextAm = usedAmigos;
       setUsedSuggestion(true);
-
-      const allUsed = true && alreadyGenios && alreadyAmigos;
-      if (allUsed) {
-        router.push("/decisoes");
-      }
+      checkRedirect(nextSug, nextGen, nextAm);
     });
   };
 
-  // 🔘 Perguntar aos gênios – usa IA 1x e trava botão
+  // PERGUNTAR AOS GÊNIOS = modo gênios, depois desativa
   const handleGenios = () => {
     callAI("genios", () => {
-      const alreadySugestao = usedSuggestion;
-      const alreadyAmigos = usedAmigos;
+      const nextSug = usedSuggestion;
+      const nextGen = true;
+      const nextAm = usedAmigos;
       setUsedGenios(true);
-
-      const allUsed = alreadySugestao && true && alreadyAmigos;
-      if (allUsed) {
-        router.push("/decisoes");
-      }
+      checkRedirect(nextSug, nextGen, nextAm);
     });
   };
 
-  // 🔘 Opinião dos amigos – usa IA 1x e trava botão
+  // OPINIÃO DOS AMIGOS = modo amigos, depois desativa
   const handleAmigos = () => {
     callAI("amigos", () => {
-      const alreadySugestao = usedSuggestion;
-      const alreadyGenios = usedGenios;
+      const nextSug = usedSuggestion;
+      const nextGen = usedGenios;
+      const nextAm = true;
       setUsedAmigos(true);
-
-      const allUsed = alreadySugestao && alreadyGenios && true;
-      if (allUsed) {
-        router.push("/decisoes");
-      }
+      checkRedirect(nextSug, nextGen, nextAm);
     });
   };
 
@@ -157,7 +153,8 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te ajudar
+        Escreva sua dúvida sobre {temaValido.toLowerCase()} (ex: "sushi ou pasta?",
+        "viagem para Itália ou Grécia?", "aceitar promoção ou não?") e deixe a IA te ajudar
         a decidir.
       </p>
 
