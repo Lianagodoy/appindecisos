@@ -1,9 +1,8 @@
-// app/tema/[slug]/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
 const LABELS: Record<string, string> = {
@@ -19,11 +18,18 @@ type Mode = "normal" | "genios" | "historia" | "amigos";
 
 export default function TemaPage() {
   const { slug } = useParams<{ slug: string }>();
+  const router = useRouter();
+
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [userName, setUserName] = useState<string>("");
+
+  // quais botões especiais já foram usados
+  const [usedSuggestion, setUsedSuggestion] = useState(false);
+  const [usedGenios, setUsedGenios] = useState(false);
+  const [usedAmigos, setUsedAmigos] = useState(false);
 
   const temaValido = useMemo(() => LABELS[slug], [slug]);
 
@@ -47,9 +53,8 @@ export default function TemaPage() {
     );
   }
 
-  const callAI = async (mode: Mode) => {
+  const callAI = async (mode: Mode, onSuccess?: () => void) => {
     setError(null);
-    setAnswer(null);
 
     const text = question.trim();
     if (text.length < 5) {
@@ -77,11 +82,67 @@ export default function TemaPage() {
 
       const data = await res.json();
       setAnswer(data.answer);
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
     } finally {
       setSending(false);
     }
+  };
+
+  // 🔘 Botão ENVIAR – só resposta normal, não conta como “usado”
+  const handleEnviar = () => {
+    callAI("normal");
+  };
+
+  // 🔘 Gostei! – volta pra tela decisões
+  const handleGostei = () => {
+    router.push("/decisoes");
+  };
+
+  // 🔘 Sugira algo diferente – usa IA 1x e trava botão
+  const handleSugiraDiferente = () => {
+    callAI("normal", () => {
+      const alreadyGenios = usedGenios;
+      const alreadyAmigos = usedAmigos;
+      setUsedSuggestion(true);
+
+      const allUsed = true && alreadyGenios && alreadyAmigos;
+      if (allUsed) {
+        router.push("/decisoes");
+      }
+    });
+  };
+
+  // 🔘 Perguntar aos gênios – usa IA 1x e trava botão
+  const handleGenios = () => {
+    callAI("genios", () => {
+      const alreadySugestao = usedSuggestion;
+      const alreadyAmigos = usedAmigos;
+      setUsedGenios(true);
+
+      const allUsed = alreadySugestao && true && alreadyAmigos;
+      if (allUsed) {
+        router.push("/decisoes");
+      }
+    });
+  };
+
+  // 🔘 Opinião dos amigos – usa IA 1x e trava botão
+  const handleAmigos = () => {
+    callAI("amigos", () => {
+      const alreadySugestao = usedSuggestion;
+      const alreadyGenios = usedGenios;
+      setUsedAmigos(true);
+
+      const allUsed = alreadySugestao && alreadyGenios && true;
+      if (allUsed) {
+        router.push("/decisoes");
+      }
+    });
   };
 
   return (
@@ -109,11 +170,11 @@ export default function TemaPage() {
         />
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
-          onClick={() => callAI("normal")}
+          onClick={handleEnviar}
           disabled={sending}
           className="rounded-lg px-4 py-2 font-semibold text-blue-800 shadow
                      bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
-                     disabled:opacity-60"
+                     disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {sending ? "Gerando resposta…" : "Enviar"}
         </button>
@@ -125,36 +186,39 @@ export default function TemaPage() {
           <div className="whitespace-pre-wrap leading-relaxed">{answer}</div>
 
           <div className="mt-4 flex gap-2 flex-wrap">
-            <button className="rounded px-3 py-2 bg-green-600 text-white">
+            <button
+              onClick={handleGostei}
+              className="rounded px-3 py-2 bg-green-600 text-white"
+            >
               Gostei!
             </button>
 
             <button
-              onClick={() => callAI("normal")}
-              disabled={sending}
-              className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300 disabled:opacity-60"
+              onClick={handleSugiraDiferente}
+              disabled={sending || usedSuggestion}
+              className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
+                         disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sugira algo diferente
             </button>
 
             <button
-              onClick={() => callAI("genios")}
-              disabled={sending}
-              className="rounded px-3 py-2 bg-blue-600 text-white disabled:opacity-60"
+              onClick={handleGenios}
+              disabled={sending || usedGenios}
+              className="rounded px-3 py-2 bg-blue-600 text-white
+                         disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Perguntar aos gênios
             </button>
 
             <button
-              onClick={() => callAI("amigos")}
-              disabled={sending}
-              className="rounded px-3 py-2 bg-purple-600 text-white disabled:opacity-60"
+              onClick={handleAmigos}
+              disabled={sending || usedAmigos}
+              className="rounded px-3 py-2 bg-purple-600 text-white
+                         disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Opinião dos amigos
             </button>
-
-            {/* se quiser, depois adicionamos um botão específico só para mini-história */}
-            {/* <button onClick={() => callAI("historia")} ...>Mini-história</button> */}
           </div>
         </section>
       )}
