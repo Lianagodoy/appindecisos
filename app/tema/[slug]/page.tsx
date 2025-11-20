@@ -31,6 +31,7 @@ export default function TemaPage() {
   const [usedSuggestion, setUsedSuggestion] = useState(false);
   const [usedGenios, setUsedGenios] = useState(false);
   const [usedAmigos, setUsedAmigos] = useState(false);
+  const [usedHistoria, setUsedHistoria] = useState(false);
 
   const temaValido = useMemo(() => LABELS[slug], [slug]);
 
@@ -54,13 +55,7 @@ export default function TemaPage() {
     );
   }
 
-  const checkRedirect = (s: boolean, g: boolean, a: boolean) => {
-    if (s && g && a) {
-      router.push("/decisoes");
-    }
-  };
-
-  const callAI = async (mode: Mode, onSuccess?: () => void) => {
+  const callAI = async (mode: Mode) => {
     setError(null);
 
     const text = question.trim();
@@ -89,8 +84,6 @@ export default function TemaPage() {
 
       const data = await res.json();
       setAnswer(data.answer);
-
-      if (onSuccess) onSuccess();
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
     } finally {
@@ -98,7 +91,7 @@ export default function TemaPage() {
     }
   };
 
-  // ENVIAR = resposta objetiva padrão
+  // ENVIAR = resposta objetiva padrão (normal)
   const handleEnviar = () => {
     callAI("normal");
   };
@@ -108,37 +101,28 @@ export default function TemaPage() {
     router.push("/decisoes");
   };
 
-  // SUGIRA ALGO DIFERENTE = mini-história, depois desativa
-  const handleSugiraDiferente = () => {
-    callAI("historia", () => {
-      const nextSug = true;
-      const nextGen = usedGenios;
-      const nextAm = usedAmigos;
-      setUsedSuggestion(true);
-      checkRedirect(nextSug, nextGen, nextAm);
-    });
+  // SUGIRA ALGO DIFERENTE = outra resposta objetiva, depois desativa
+  const handleSugiraDiferente = async () => {
+    await callAI("normal");
+    setUsedSuggestion(true);
   };
 
   // PERGUNTAR AOS GÊNIOS = modo gênios, depois desativa
-  const handleGenios = () => {
-    callAI("genios", () => {
-      const nextSug = usedSuggestion;
-      const nextGen = true;
-      const nextAm = usedAmigos;
-      setUsedGenios(true);
-      checkRedirect(nextSug, nextGen, nextAm);
-    });
+  const handleGenios = async () => {
+    await callAI("genios");
+    setUsedGenios(true);
   };
 
-  // OPINIÃO DOS AMIGOS = modo amigos, depois desativa
-  const handleAmigos = () => {
-    callAI("amigos", () => {
-      const nextSug = usedSuggestion;
-      const nextGen = usedGenios;
-      const nextAm = true;
-      setUsedAmigos(true);
-      checkRedirect(nextSug, nextGen, nextAm);
-    });
+  // OPINIÃO DOS AMIGOS = modo amigos, depois desativa (NÃO volta sozinho)
+  const handleAmigos = async () => {
+    await callAI("amigos");
+    setUsedAmigos(true);
+  };
+
+  // MINI-HISTÓRIA = modo historia, depois desativa
+  const handleHistoria = async () => {
+    await callAI("historia");
+    setUsedHistoria(true);
   };
 
   return (
@@ -215,6 +199,15 @@ export default function TemaPage() {
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Opinião dos amigos
+            </button>
+
+            <button
+              onClick={handleHistoria}
+              disabled={sending || usedHistoria}
+              className="rounded px-3 py-2 bg-pink-600 text-white
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Mini-história
             </button>
           </div>
         </section>
