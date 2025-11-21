@@ -137,8 +137,7 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Escreva sua dúvida sobre {temaValido.toLowerCase()} (ex: "sushi ou pasta?",
-        "viagem para Itália ou Grécia?", "aceitar promoção ou não?") e deixe a IA te ajudar
+        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te ajudar
         a decidir.
       </p>
 
