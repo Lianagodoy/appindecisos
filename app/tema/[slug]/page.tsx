@@ -17,6 +17,37 @@ const LABELS: Record<string, string> = {
 
 type Mode = "normal" | "genios" | "historia" | "amigos";
 
+/**
+ * Salva a opinião dos amigos na API /api/opiniao,
+ * que por sua vez grava na tabela friend_opinions (Supabase).
+ */
+async function salvarOpiniaoDoAmigo(params: {
+  amigoNome?: string;
+  questionId: string;
+  tema: string;
+  opinionText: string;
+}) {
+  const res = await fetch("/api/opiniao", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amigo_nome: params.amigoNome ?? null,
+      question_id: params.questionId,
+      tema: params.tema,
+      opinion_text: params.opinionText,
+    }),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    console.error("Erro ao salvar opinião:", data);
+    throw new Error(data.error || "Erro ao salvar opinião no banco.");
+  }
+
+  return data.opinion;
+}
+
 export default function TemaPage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
@@ -45,23 +76,29 @@ export default function TemaPage() {
   if (!temaValido) {
     return (
       <main className="min-h-dvh flex flex-col items-center justify-center gap-3 px-6">
-        <p className="text-red-600 font-semibold">
-          Tema inválido: {slug}
-        </p>
-        <Link href="/decisoes" className="px-4 py-2 rounded bg-blue-600 text-white">
+        <p className="text-red-600 font-semibold">Tema inválido: {slug}</p>
+        <Link
+          href="/decisoes"
+          className="px-4 py-2 rounded bg-blue-600 text-white"
+        >
           Voltar
         </Link>
       </main>
     );
   }
 
-  const callAI = async (mode: Mode) => {
+  /**
+   * Chama a IA na rota /api/ia.
+   * Continua atualizando o estado `answer`,
+   * mas AGORA também retorna o texto para quem chamou.
+   */
+  const callAI = async (mode: Mode): Promise<string | null> => {
     setError(null);
 
     const text = question.trim();
     if (text.length < 5) {
       setError("Escreva sua pergunta com um pouco mais de detalhes.");
-      return;
+      return null;
     }
 
     setSending(true);
@@ -84,8 +121,10 @@ export default function TemaPage() {
 
       const data = await res.json();
       setAnswer(data.answer);
+      return data.answer as string;
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
+      return null;
     } finally {
       setSending(false);
     }
@@ -93,7 +132,7 @@ export default function TemaPage() {
 
   // ENVIAR = resposta objetiva padrão (normal)
   const handleEnviar = () => {
-    callAI("normal");
+    void callAI("normal");
   };
 
   // GOSTEI = volta para Tela Decisões
@@ -113,10 +152,39 @@ export default function TemaPage() {
     setUsedGenios(true);
   };
 
-  // OPINIÃO DOS AMIGOS = modo amigos, depois desativa (NÃO volta sozinho)
+  // OPINIÃO DOS AMIGOS = chama IA modo "amigos" e SALVA no Supabase
   const handleAmigos = async () => {
-    await callAI("amigos");
+    // 1) Chama a IA nesse modo
+    const textoOpiniao = await callAI("amigos");
     setUsedAmigos(true);
+
+    // Se deu erro ou não veio texto, não tenta salvar
+    if (!textoOpiniao) {
+      console.warn("Nenhuma opinião gerada para salvar.");
+      return;
+    }
+
+    try {
+      // 2) Definimos um identificador da pergunta e o tema
+      //    Por enquanto, usamos a própria pergunta como questionId.
+      const questionId = question || "sem-pergunta";
+      const tema = temaValido;
+
+      // Nome do “amigo” (por enquanto um rótulo fixo, depois podemos virar input)
+      const amigoNome = "Amigo IA";
+
+      await salvarOpiniaoDoAmigo({
+        amigoNome,
+        questionId,
+        tema,
+        opinionText: textoOpiniao,
+      });
+
+      console.log("Opinião dos amigos salva com sucesso.");
+    } catch (e) {
+      console.error("Erro ao salvar opinião dos amigos:", e);
+      // Aqui não mostramos erro para o usuário ainda, só logamos
+    }
   };
 
   // MINI-HISTÓRIA = modo historia, depois desativa
@@ -137,8 +205,8 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te ajudar
-        a decidir.
+        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te
+        ajudar a decidir.
       </p>
 
       <div className="mt-5 space-y-3 max-w-xl">
@@ -214,4 +282,3 @@ export default function TemaPage() {
     </main>
   );
 }
-
