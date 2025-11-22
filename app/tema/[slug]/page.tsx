@@ -205,14 +205,17 @@ export default function TemaPage() {
       </div>
 
       <p className="mt-2 text-sm text-slate-600">
-        Escreva sua dúvida sobre {temaValido.toLowerCase()} e deixe a IA te
-        ajudar a decidir.
+        Escreva sua dúvida, curiosidade ou situação sobre{" "}
+        {temaValido.toLowerCase()} e deixe o AppIndecisos te ajudar a{" "}
+        <span className="font-semibold">
+          decidir, entender melhor, descobrir possibilidades e aprender rápido.
+        </span>
       </p>
 
       <div className="mt-5 space-y-3 max-w-xl">
         <textarea
           className="w-full min-h-28 rounded border px-3 py-2 outline-none focus:ring"
-          placeholder={`Escreva sua pergunta sobre ${temaValido}…`}
+          placeholder={`Escreva sua pergunta, dúvida ou curiosidade sobre ${temaValido}…`}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
         />
