@@ -61,7 +61,8 @@ export default function TemaPage() {
   // controle dos botões especiais
   const [usedSuggestion, setUsedSuggestion] = useState(false);
   const [usedGenios, setUsedGenios] = useState(false);
-  const [usedAmigos, setUsedAmigos] = useState(false);
+  const [usedAmigosIA, setUsedAmigosIA] = useState(false);
+  const [usedAmigosReal, setUsedAmigosReal] = useState(false);
   const [usedHistoria, setUsedHistoria] = useState(false);
 
   const temaValido = useMemo(() => LABELS[slug], [slug]);
@@ -90,7 +91,7 @@ export default function TemaPage() {
   /**
    * Chama a IA na rota /api/ia.
    * Continua atualizando o estado `answer`,
-   * mas AGORA também retorna o texto para quem chamou.
+   * mas também retorna o texto para quem chamou.
    */
   const callAI = async (mode: Mode): Promise<string | null> => {
     setError(null);
@@ -152,25 +153,19 @@ export default function TemaPage() {
     setUsedGenios(true);
   };
 
-  // OPINIÃO DOS AMIGOS = chama IA modo "amigos" e SALVA no Supabase
-  const handleAmigos = async () => {
-    // 1) Chama a IA nesse modo
+  // OPINIÃO DOS AMIGOS (IA) = chama IA modo "amigos" e SALVA no Supabase
+  const handleAmigosIA = async () => {
     const textoOpiniao = await callAI("amigos");
-    setUsedAmigos(true);
+    setUsedAmigosIA(true);
 
-    // Se deu erro ou não veio texto, não tenta salvar
     if (!textoOpiniao) {
       console.warn("Nenhuma opinião gerada para salvar.");
       return;
     }
 
     try {
-      // 2) Definimos um identificador da pergunta e o tema
-      //    Por enquanto, usamos a própria pergunta como questionId.
       const questionId = question || "sem-pergunta";
       const tema = temaValido;
-
-      // Nome do “amigo” (por enquanto um rótulo fixo, depois podemos virar input)
       const amigoNome = "Amigo IA";
 
       await salvarOpiniaoDoAmigo({
@@ -180,10 +175,50 @@ export default function TemaPage() {
         opinionText: textoOpiniao,
       });
 
-      console.log("Opinião dos amigos salva com sucesso.");
+      console.log("Opinião dos amigos (IA) salva com sucesso.");
     } catch (e) {
-      console.error("Erro ao salvar opinião dos amigos:", e);
-      // Aqui não mostramos erro para o usuário ainda, só logamos
+      console.error("Erro ao salvar opinião dos amigos (IA):", e);
+    }
+  };
+
+  // OPINIÃO DOS AMIGOS (REAL) = gera link de convite em /api/invite
+  const handleInviteReal = async () => {
+    setError(null);
+
+    const text = question.trim();
+    if (text.length < 5) {
+      setError("Escreva sua pergunta com um pouco mais de detalhes.");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await fetch("/api/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tema: temaValido,
+          question: text,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || "Erro ao gerar convite.");
+      }
+
+      const link = `${window.location.origin}/opinar/${data.inviteId}`;
+
+      // Mostra o link na própria área de resposta por enquanto
+      setAnswer(
+        `Copie o link abaixo e envie para um amigo responder:\n\n${link}`
+      );
+      setUsedAmigosReal(true);
+    } catch (e: any) {
+      console.error("Erro ao criar convite real:", e);
+      setError(e.message || "Erro ao criar convite real para amigos.");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -262,13 +297,24 @@ export default function TemaPage() {
               Perguntar aos gênios
             </button>
 
+            {/* IA simulando amigos */}
             <button
-              onClick={handleAmigos}
-              disabled={sending || usedAmigos}
+              onClick={handleAmigosIA}
+              disabled={sending || usedAmigosIA}
               className="rounded px-3 py-2 bg-purple-600 text-white
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Opinião dos amigos
+              Opinião dos amigos (IA)
+            </button>
+
+            {/* Amigos reais via link */}
+            <button
+              onClick={handleInviteReal}
+              disabled={sending || usedAmigosReal}
+              className="rounded px-3 py-2 bg-yellow-600 text-white
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Opinião dos amigos (REAL)
             </button>
 
             <button
