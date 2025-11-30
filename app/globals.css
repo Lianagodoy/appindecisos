@@ -9,20 +9,19 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent; /* Remove highlight azul feio no mobile */
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Faz o app ocupar 100% da tela */
 html,
 body {
   height: 100%;
 }
 
 /* ---------------------------------------------------------
-   Configuração da fonte Nunito
+   Fonte Nunito
 --------------------------------------------------------- */
 :root {
-  --font-nunito: 'Nunito', sans-serif;
+  --font-nunito: "Nunito", sans-serif;
 }
 
 .font-nunito {
@@ -30,21 +29,15 @@ body {
 }
 
 /* ---------------------------------------------------------
-   Ajustes opcionais úteis para interfaces modernas
+   Ajustes gerais
 --------------------------------------------------------- */
 
-/* Deixa textos mais suaves no Windows */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Remove scroll horizontal acidental */
-body {
   overflow-x: hidden;
 }
 
-/* Evita zoom automático do iPhone em inputs */
 input,
 select,
 textarea {
@@ -52,76 +45,108 @@ textarea {
 }
 
 /* ---------------------------------------------------------
-   PADRÃO DE TELAS COM FUNDO (ESTILO SAUDAÇÃO)
-   .screen          => layout base (centraliza e aplica imagem)
-   .screen-content  => coluna onde ficam textos/botões
-   .screen-XXXX     => escolhe qual imagem de fundo usar
+   PADRÃO DE TELAS COM FUNDO
 --------------------------------------------------------- */
 
-/* Layout base de qualquer tela com fundo de imagem */
 .screen {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
 
-  justify-content: center;   /* centro horizontal */
-  align-items: center;       /* centro vertical */
+  justify-content: center;
+  align-items: center;
 
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
 }
 
-/* Área interna da tela (tipo “celular” no meio da imagem) */
-..screen-content {
+.screen-content {
   width: 100%;
   max-width: 430px;
-  margin: 0 auto;            /* garante centro horizontal */
+  margin: 0 auto;
   padding: 24px 16px 40px;
   text-align: center;
 }
 
 /* ---------------------------------------------------------
-   UMA CLASSE POR TELA – SÓ MUDA A IMAGEM
-   (ajuste os nomes dos arquivos conforme suas imagens reais)
+   TELAS — IMAGENS DE FUNDO OFICIAIS
 --------------------------------------------------------- */
 
-/* Tela de Saudação */
+/* Saudação */
 .screen-saudacao {
   background-image: url("/asset/imagens-app/saudacao-hero.png");
 }
 
-/* Tela de Login */
+/* Login */
 .screen-login {
   background-image: url("/asset/imagens-app/login-hero.png");
 }
 
+/* Cadastro */
 .screen-cadastro {
   background-image: url("/asset/imagens-app/cadastro-hero.png");
- }
+}
 
-/* Tela de Decisões / Temas */
+/* Decisões (Tela de Temas) */
 .screen-decisoes {
-    background-image: url("/asset/imagens-app/temas-pattern.png");
+  background-image: url("/asset/imagens-app/temas-pattern.png");
 }
 
-/* Tela de Pergunta */
+/* Pergunta (a escolher imagem depois) */
 .screen-pergunta {
-  background-image: url("/pergunta-hero.png");
+  background-image: url("/asset/imagens-app/mini-historia.png");
 }
 
-/* Tela de Resposta */
+/* Resposta - tela padrão */
 .screen-resposta {
-  background-image: url("/resposta-hero.png");
+  background-image: url("/asset/imagens-app/resposta-genios.png");
 }
 
-/* Tela de teste de conexão Supabase (se quiser fundo também) */
-.screen-teste {
-  background-image: url("/teste-hero.png");
+/* Resposta - amigos */
+.screen-resposta-amigos {
+  background-image: url("/asset/imagens-app/resposta-amigos-ia.png");
 }
 
-/* Se tiver outras telas, você pode seguir o mesmo padrão:
-   .screen-minhaoutratelax {
-     background-image: url("/minhaoutratelax-hero.png");
-   }
-*/
+/* Resposta - mini-história */
+.screen-mini-historia {
+  background-image: url("/asset/imagens-app/mini-historia.png");
+}
+
+/* ---------------------------------------------------------
+   TELAS DOS TEMAS INDIVIDUAIS
+--------------------------------------------------------- */
+
+.screen-tema-gastronomia {
+  background-image: url("/asset/imagens-app/tema-gastronomia.png");
+}
+
+.screen-tema-viagem {
+  background-image: url("/asset/imagens-app/tema-viagem.png");
+}
+
+.screen-tema-filmes {
+  background-image: url("/asset/imagens-app/tema-filmes.png");
+}
+
+.screen-tema-rotina {
+  background-image: url("/asset/imagens-app/tema-rotina.png");
+}
+
+.screen-tema-social {
+  background-image: url("/asset/imagens-app/tema-social.png");
+}
+
+.screen-tema-profissional {
+  background-image: url("/asset/imagens-app/tema-trabalho.png");
+}
+
+/* ---------------------------------------------------------
+   Remover cartão branco padrão do Supabase Auth UI
+--------------------------------------------------------- */
+
+.supabase-auth-ui_ui-container {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
