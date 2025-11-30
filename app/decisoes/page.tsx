@@ -1,5 +1,6 @@
 "use client";
 
+// app/decisoes/page.tsx
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -26,15 +27,18 @@ export default function DecisoesPage() {
     let mounted = true;
     supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return;
+
       const user = data.user;
       if (!user) {
         window.location.href = "/auth?mode=signin";
         return;
       }
+
       const name = (user.user_metadata?.name as string) || "";
       setDisplayName(name || user.email || "Usuário");
       setLoading(false);
     });
+
     return () => {
       mounted = false;
     };
@@ -47,48 +51,63 @@ export default function DecisoesPage() {
 
   if (loading) {
     return (
-      <main className="min-h-dvh flex items-center justify-center">
-        <span className="text-blue-700 font-semibold">Carregando…</span>
-      </main>
+      <div className="screen screen-decisoes">
+        <div className="screen-content font-nunito">
+          <span className="text-blue-700 font-semibold">Carregando…</span>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-dvh px-6 py-8">
-      <div className="border border-blue-300 rounded p-3 inline-flex items-center gap-3">
-        <h1 className="text-xl font-bold text-blue-700">
-          Bem-vindo, {displayName}!
-        </h1>
-      </div>
+    <div className="screen screen-decisoes">
+      <div className="screen-content font-nunito">
 
-      <h2 className="mt-8 mb-4 text-center text-blue-700 font-bold">
-        Escolha o Tema
-      </h2>
+        {/* Header */}
+        <div className="w-full max-w-xs mx-auto text-center mb-6">
+          <h1 className="text-2xl font-bold text-blue-700 drop-shadow">
+            Bem-vindo, {displayName}!
+          </h1>
+        </div>
 
-      <div className="mx-auto max-w-xs space-y-4">
-        {TEMAS.map((t) => (
-          <Link
-            key={t.slug}
-            href={`/tema/${t.slug}`}
-            className="block w-full rounded-lg px-4 py-3 text-center font-semibold text-blue-800 shadow
-                     bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400 active:scale-[0.99]"
+        {/* Título */}
+        <h2 className="text-xl text-blue-700 font-bold text-center mb-4 drop-shadow">
+          Escolha o Tema
+        </h2>
+
+        {/* Lista de temas */}
+        <div className="mx-auto max-w-xs space-y-4">
+          {TEMAS.map((t) => (
+            <Link
+              key={t.slug}
+              href={`/tema/${t.slug}`}
+              className="block w-full rounded-lg px-4 py-3 text-center font-semibold 
+                         text-blue-800 shadow bg-gradient-to-b from-slate-100/90 to-slate-300/90
+                         hover:from-slate-200 hover:to-slate-400 active:scale-[0.99]
+                         backdrop-blur-sm"
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Rodapé com ações */}
+        <div className="flex justify-center items-center gap-3 mt-8">
+          <button
+            onClick={signOut}
+            className="rounded-lg px-4 py-2 bg-slate-200 text-blue-800 hover:bg-slate-300 shadow"
           >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+            Sair
+          </button>
 
-      <div className="mt-8 space-x-3">
-        <button
-          onClick={signOut}
-          className="rounded-lg px-4 py-2 bg-slate-200 hover:bg-slate-300"
-        >
-          Sair
-        </button>
-        <Link href="/" className="rounded-lg px-4 py-2 bg-blue-600 text-white">
-          Voltar à inicial
-        </Link>
+          <Link
+            href="/"
+            className="rounded-lg px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 shadow"
+          >
+            Voltar
+          </Link>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
