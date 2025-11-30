@@ -52,7 +52,7 @@ export default function AuthClient() {
           Acesse sua conta e continue decidindo com IA!
         </p>
 
-        <div className="w-full max-w-xs mx-auto bg-white/85 rounded-xl p-4 shadow-lg backdrop-blur-sm">
+        <div className="w-full max-w-xs mx-auto">
           <Auth
             supabaseClient={supabase}
             view="sign_in"
