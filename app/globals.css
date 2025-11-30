@@ -64,8 +64,8 @@ textarea {
   min-height: 100dvh;
   display: flex;
 
-  justify-content: center;   /* CENTRALIZA HORIZONTALMENTE */
-  align-items: flex-start;    /* NÃO CENTRALIZA VERTICALMENTE */
+  justify-content: center;   /* centro horizontal */
+  align-items: center;       /* centro vertical */
 
   background-size: cover;
   background-position: center top;
@@ -73,10 +73,10 @@ textarea {
 }
 
 /* Área interna da tela (tipo “celular” no meio da imagem) */
-.screen-content {
+..screen-content {
   width: 100%;
   max-width: 430px;
-  margin: 0 auto;            /* <-- ESSA LINHA QUE CENTRALIZA DE VERDADE */
+  margin: 0 auto;            /* garante centro horizontal */
   padding: 24px 16px 40px;
   text-align: center;
 }
