@@ -27,10 +27,6 @@ const SCREEN_CLASSES_TEMA: Record<string, string> = {
 
 type Mode = "normal" | "genios" | "historia" | "amigos";
 
-/**
- * Salva a opinião dos amigos na API /api/opiniao,
- * que por sua vez grava na tabela friend_opinions (Supabase).
- */
 async function salvarOpiniaoDoAmigo(params: {
   amigoNome?: string;
   questionId: string;
@@ -68,14 +64,12 @@ export default function TemaPage() {
   const [sending, setSending] = useState(false);
   const [userName, setUserName] = useState<string>("");
 
-  // controle dos botões especiais
   const [usedSuggestion, setUsedSuggestion] = useState(false);
   const [usedGenios, setUsedGenios] = useState(false);
   const [usedAmigosIA, setUsedAmigosIA] = useState(false);
   const [usedAmigosReal, setUsedAmigosReal] = useState(false);
   const [usedHistoria, setUsedHistoria] = useState(false);
 
-  // último modo de resposta usado (para trocar o fundo nas respostas especiais)
   const [lastMode, setLastMode] = useState<Mode | null>(null);
 
   const temaValido = useMemo(() => LABELS[slug], [slug]);
@@ -105,11 +99,6 @@ export default function TemaPage() {
     );
   }
 
-  /**
-   * Chama a IA na rota /api/ia.
-   * Continua atualizando o estado `answer`,
-   * mas também retorna o texto para quem chamou.
-   */
   const callAI = async (mode: Mode): Promise<string | null> => {
     setError(null);
 
@@ -139,7 +128,7 @@ export default function TemaPage() {
 
       const data = await res.json();
       setAnswer(data.answer);
-      setLastMode(mode); // registra o modo da última resposta
+      setLastMode(mode);
       return data.answer as string;
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
@@ -149,29 +138,24 @@ export default function TemaPage() {
     }
   };
 
-  // ENVIAR = resposta objetiva padrão (normal)
   const handleEnviar = () => {
     void callAI("normal");
   };
 
-  // GOSTEI = volta para Tela Decisões
   const handleGostei = () => {
     router.push("/decisoes");
   };
 
-  // SUGIRA ALGO DIFERENTE = outra resposta objetiva, depois desativa
   const handleSugiraDiferente = async () => {
     await callAI("normal");
     setUsedSuggestion(true);
   };
 
-  // PERGUNTAR AOS GÊNIOS = modo gênios, depois desativa
   const handleGenios = async () => {
     await callAI("genios");
     setUsedGenios(true);
   };
 
-  // OPINIÃO DOS AMIGOS (IA) = chama IA modo "amigos" e SALVA no Supabase
   const handleAmigosIA = async () => {
     const textoOpiniao = await callAI("amigos");
     setUsedAmigosIA(true);
@@ -199,7 +183,6 @@ export default function TemaPage() {
     }
   };
 
-  // OPINIÃO DOS AMIGOS (REAL) = gera link de convite em /api/invite
   const handleInviteReal = async () => {
     setError(null);
 
@@ -227,7 +210,6 @@ export default function TemaPage() {
 
       const link = `${window.location.origin}/opinar/${data.inviteId}`;
 
-      // Mostra o link na própria área de resposta por enquanto
       setAnswer(
         `Copie o link abaixo e envie para um amigo responder:\n\n${link}`
       );
@@ -241,15 +223,10 @@ export default function TemaPage() {
     }
   };
 
-  // MINI-HISTÓRIA = modo historia, depois desativa
   const handleHistoria = async () => {
     await callAI("historia");
     setUsedHistoria(true);
   };
-
-  // -------------------------------------------------------
-  // Escolha da classe de fundo (tema + tipo de resposta)
-  // -------------------------------------------------------
 
   const baseThemeClass =
     SCREEN_CLASSES_TEMA[slug] ?? "screen-decisoes";
@@ -259,13 +236,13 @@ export default function TemaPage() {
   if (answer && lastMode) {
     switch (lastMode) {
       case "genios":
-        activeScreenClass = "screen-resposta"; // resposta-genios.png
+        activeScreenClass = "screen-resposta";
         break;
       case "amigos":
-        activeScreenClass = "screen-resposta-amigos"; // resposta-amigos-ia.png
+        activeScreenClass = "screen-resposta-amigos";
         break;
       case "historia":
-        activeScreenClass = "screen-mini-historia"; // mini-historia.png
+        activeScreenClass = "screen-mini-historia";
         break;
       case "normal":
       default:
@@ -277,18 +254,17 @@ export default function TemaPage() {
   return (
     <div className={`screen ${activeScreenClass}`}>
       <div className="screen-content font-nunito">
-
         <div className="w-full max-w-xl mx-auto text-left">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-blue-700 drop-shadow">
+            <h1 className="text-2xl font-extrabold text-blue-700 drop-shadow">
               Tema: {temaValido}
             </h1>
-            <Link href="/decisoes" className="text-blue-700 underline">
+            <Link href="/decisoes" className="text-blue-700 underline text-base">
               Trocar tema
             </Link>
           </div>
 
-          <p className="mt-2 text-sm text-slate-700">
+          <p className="mt-2 text-base text-slate-700 leading-relaxed">
             Escreva sua dúvida, curiosidade ou situação sobre{" "}
             {temaValido.toLowerCase()} e deixe o AppIndecisos te ajudar a{" "}
             <span className="font-semibold">
@@ -298,7 +274,8 @@ export default function TemaPage() {
 
           <div className="mt-5 space-y-3">
             <textarea
-              className="w-full min-h-28 rounded border px-3 py-2 outline-none focus:ring"
+              className="w-full min-h-36 rounded border px-3 py-3 outline-none focus:ring
+                         bg-transparent text-lg placeholder:text-slate-500"
               placeholder={`Escreva sua pergunta, dúvida ou curiosidade sobre ${temaValido}…`}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -307,8 +284,9 @@ export default function TemaPage() {
             <button
               onClick={handleEnviar}
               disabled={sending}
-              className="rounded-lg px-4 py-2 font-semibold text-blue-800 shadow
+              className="block w-full max-w-xs mx-auto rounded-lg px-6 py-3 font-semibold text-blue-800 shadow
                          bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
+                         text-lg
                          disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {sending ? "Gerando resposta…" : "Enviar"}
@@ -317,8 +295,10 @@ export default function TemaPage() {
 
           {answer && (
             <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-4 bg-white/90 shadow-sm">
-              <h2 className="text-blue-700 font-bold mb-2">Resposta</h2>
-              <div className="whitespace-pre-wrap leading-relaxed">
+              <h2 className="text-xl text-blue-700 font-bold mb-2">
+                Resposta
+              </h2>
+              <div className="whitespace-pre-wrap leading-relaxed text-base">
                 {answer}
               </div>
 
@@ -348,7 +328,6 @@ export default function TemaPage() {
                   Perguntar aos gênios
                 </button>
 
-                {/* IA simulando amigos */}
                 <button
                   onClick={handleAmigosIA}
                   disabled={sending || usedAmigosIA}
@@ -358,7 +337,6 @@ export default function TemaPage() {
                   Opinião dos amigos (IA)
                 </button>
 
-                {/* Amigos reais via link */}
                 <button
                   onClick={handleInviteReal}
                   disabled={sending || usedAmigosReal}
