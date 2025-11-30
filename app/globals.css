@@ -98,12 +98,12 @@ textarea {
 
 /* Tela de Cadastro */
 .screen-cadastro {
-  background-image: url("/cadastro-hero.png");
+  background-image: url("/asset/imagens-app/login-hero.png");
 }
 
 /* Tela de Decisões / Temas */
 .screen-decisoes {
-    background-image: url("/asset/imagens-app/decisoes-hero.png");
+    background-image: url("/asset/imagens-app/temas-pattern.png");
 }
 
 /* Tela de Pergunta */
