@@ -103,8 +103,7 @@ textarea {
 
 /* Tela de Decisões / Temas */
 .screen-decisoes {
-  /* ajuste o caminho se o arquivo estiver em outro lugar */
-  background-image: url("/asset/imagens-app/decisoes-hero.png");
+    background-image: url("/asset/imagens-app/decisoes-hero.png");
 }
 
 /* Tela de Pergunta */
