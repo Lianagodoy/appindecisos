@@ -15,6 +15,16 @@ const LABELS: Record<string, string> = {
   social: "Vida Social e Pessoal",
 };
 
+// mapeia cada tema para a classe de fundo correspondente
+const SCREEN_CLASSES_TEMA: Record<string, string> = {
+  gastronomia: "screen-tema-gastronomia",
+  viagens: "screen-tema-viagem",
+  profissional: "screen-tema-profissional",
+  audiovisual: "screen-tema-filmes",
+  rotina: "screen-tema-rotina",
+  social: "screen-tema-social",
+};
+
 type Mode = "normal" | "genios" | "historia" | "amigos";
 
 /**
@@ -65,6 +75,9 @@ export default function TemaPage() {
   const [usedAmigosReal, setUsedAmigosReal] = useState(false);
   const [usedHistoria, setUsedHistoria] = useState(false);
 
+  // último modo de resposta usado (para trocar o fundo nas respostas especiais)
+  const [lastMode, setLastMode] = useState<Mode | null>(null);
+
   const temaValido = useMemo(() => LABELS[slug], [slug]);
 
   useEffect(() => {
@@ -76,15 +89,19 @@ export default function TemaPage() {
 
   if (!temaValido) {
     return (
-      <main className="min-h-dvh flex flex-col items-center justify-center gap-3 px-6">
-        <p className="text-red-600 font-semibold">Tema inválido: {slug}</p>
-        <Link
-          href="/decisoes"
-          className="px-4 py-2 rounded bg-blue-600 text-white"
-        >
-          Voltar
-        </Link>
-      </main>
+      <div className="screen screen-decisoes">
+        <div className="screen-content font-nunito">
+          <p className="text-red-600 font-semibold mb-4">
+            Tema inválido: {slug}
+          </p>
+          <Link
+            href="/decisoes"
+            className="px-4 py-2 rounded bg-blue-600 text-white"
+          >
+            Voltar
+          </Link>
+        </div>
+      </div>
     );
   }
 
@@ -122,6 +139,7 @@ export default function TemaPage() {
 
       const data = await res.json();
       setAnswer(data.answer);
+      setLastMode(mode); // registra o modo da última resposta
       return data.answer as string;
     } catch (e: any) {
       setError(e.message || "Falha ao gerar resposta.");
@@ -214,6 +232,7 @@ export default function TemaPage() {
         `Copie o link abaixo e envie para um amigo responder:\n\n${link}`
       );
       setUsedAmigosReal(true);
+      setLastMode("amigos");
     } catch (e: any) {
       console.error("Erro ao criar convite real:", e);
       setError(e.message || "Erro ao criar convite real para amigos.");
@@ -228,106 +247,140 @@ export default function TemaPage() {
     setUsedHistoria(true);
   };
 
+  // -------------------------------------------------------
+  // Escolha da classe de fundo (tema + tipo de resposta)
+  // -------------------------------------------------------
+
+  const baseThemeClass =
+    SCREEN_CLASSES_TEMA[slug] ?? "screen-decisoes";
+
+  let activeScreenClass = baseThemeClass;
+
+  if (answer && lastMode) {
+    switch (lastMode) {
+      case "genios":
+        activeScreenClass = "screen-resposta"; // resposta-genios.png
+        break;
+      case "amigos":
+        activeScreenClass = "screen-resposta-amigos"; // resposta-amigos-ia.png
+        break;
+      case "historia":
+        activeScreenClass = "screen-mini-historia"; // mini-historia.png
+        break;
+      case "normal":
+      default:
+        activeScreenClass = baseThemeClass;
+        break;
+    }
+  }
+
   return (
-    <main className="min-h-dvh px-6 py-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-700">
-          Tema: {temaValido}
-        </h1>
-        <Link href="/decisoes" className="text-blue-700 underline">
-          Trocar tema
-        </Link>
-      </div>
+    <div className={`screen ${activeScreenClass}`}>
+      <div className="screen-content font-nunito">
 
-      <p className="mt-2 text-sm text-slate-600">
-        Escreva sua dúvida, curiosidade ou situação sobre{" "}
-        {temaValido.toLowerCase()} e deixe o AppIndecisos te ajudar a{" "}
-        <span className="font-semibold">
-          decidir, entender melhor, descobrir possibilidades e aprender rápido.
-        </span>
-      </p>
+        <div className="w-full max-w-xl mx-auto text-left">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-blue-700 drop-shadow">
+              Tema: {temaValido}
+            </h1>
+            <Link href="/decisoes" className="text-blue-700 underline">
+              Trocar tema
+            </Link>
+          </div>
 
-      <div className="mt-5 space-y-3 max-w-xl">
-        <textarea
-          className="w-full min-h-28 rounded border px-3 py-2 outline-none focus:ring"
-          placeholder={`Escreva sua pergunta, dúvida ou curiosidade sobre ${temaValido}…`}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <button
-          onClick={handleEnviar}
-          disabled={sending}
-          className="rounded-lg px-4 py-2 font-semibold text-blue-800 shadow
-                     bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
-                     disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {sending ? "Gerando resposta…" : "Enviar"}
-        </button>
-      </div>
+          <p className="mt-2 text-sm text-slate-700">
+            Escreva sua dúvida, curiosidade ou situação sobre{" "}
+            {temaValido.toLowerCase()} e deixe o AppIndecisos te ajudar a{" "}
+            <span className="font-semibold">
+              decidir, entender melhor, descobrir possibilidades e aprender rápido.
+            </span>
+          </p>
 
-      {answer && (
-        <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-4 bg-white">
-          <h2 className="text-blue-700 font-bold mb-2">Resposta</h2>
-          <div className="whitespace-pre-wrap leading-relaxed">{answer}</div>
-
-          <div className="mt-4 flex gap-2 flex-wrap">
+          <div className="mt-5 space-y-3">
+            <textarea
+              className="w-full min-h-28 rounded border px-3 py-2 outline-none focus:ring"
+              placeholder={`Escreva sua pergunta, dúvida ou curiosidade sobre ${temaValido}…`}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+            />
+            {error && <p className="text-red-600 text-sm">{error}</p>}
             <button
-              onClick={handleGostei}
-              className="rounded px-3 py-2 bg-green-600 text-white"
+              onClick={handleEnviar}
+              disabled={sending}
+              className="rounded-lg px-4 py-2 font-semibold text-blue-800 shadow
+                         bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
+                         disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Gostei!
-            </button>
-
-            <button
-              onClick={handleSugiraDiferente}
-              disabled={sending || usedSuggestion}
-              className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Sugira algo diferente
-            </button>
-
-            <button
-              onClick={handleGenios}
-              disabled={sending || usedGenios}
-              className="rounded px-3 py-2 bg-blue-600 text-white
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Perguntar aos gênios
-            </button>
-
-            {/* IA simulando amigos */}
-            <button
-              onClick={handleAmigosIA}
-              disabled={sending || usedAmigosIA}
-              className="rounded px-3 py-2 bg-purple-600 text-white
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Opinião dos amigos (IA)
-            </button>
-
-            {/* Amigos reais via link */}
-            <button
-              onClick={handleInviteReal}
-              disabled={sending || usedAmigosReal}
-              className="rounded px-3 py-2 bg-yellow-600 text-white
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Opinião dos amigos (REAL)
-            </button>
-
-            <button
-              onClick={handleHistoria}
-              disabled={sending || usedHistoria}
-              className="rounded px-3 py-2 bg-pink-600 text-white
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Mini-história
+              {sending ? "Gerando resposta…" : "Enviar"}
             </button>
           </div>
-        </section>
-      )}
-    </main>
+
+          {answer && (
+            <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-4 bg-white/90 shadow-sm">
+              <h2 className="text-blue-700 font-bold mb-2">Resposta</h2>
+              <div className="whitespace-pre-wrap leading-relaxed">
+                {answer}
+              </div>
+
+              <div className="mt-4 flex gap-2 flex-wrap">
+                <button
+                  onClick={handleGostei}
+                  className="rounded px-3 py-2 bg-green-600 text-white"
+                >
+                  Gostei!
+                </button>
+
+                <button
+                  onClick={handleSugiraDiferente}
+                  disabled={sending || usedSuggestion}
+                  className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sugira algo diferente
+                </button>
+
+                <button
+                  onClick={handleGenios}
+                  disabled={sending || usedGenios}
+                  className="rounded px-3 py-2 bg-blue-600 text-white
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Perguntar aos gênios
+                </button>
+
+                {/* IA simulando amigos */}
+                <button
+                  onClick={handleAmigosIA}
+                  disabled={sending || usedAmigosIA}
+                  className="rounded px-3 py-2 bg-purple-600 text-white
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Opinião dos amigos (IA)
+                </button>
+
+                {/* Amigos reais via link */}
+                <button
+                  onClick={handleInviteReal}
+                  disabled={sending || usedAmigosReal}
+                  className="rounded px-3 py-2 bg-yellow-600 text-white
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Opinião dos amigos (REAL)
+                </button>
+
+                <button
+                  onClick={handleHistoria}
+                  disabled={sending || usedHistoria}
+                  className="rounded px-3 py-2 bg-pink-600 text-white
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Mini-história
+                </button>
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
