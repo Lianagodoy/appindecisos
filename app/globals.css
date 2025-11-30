@@ -2,22 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------
+   Reset global para garantir consistência visual
+--------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Remove highlight azul feio no mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Faz o app ocupar 100% da tela */
+html, body {
+  height: 100%;
+}
+
+/* ---------------------------------------------------------
+   Configuração da fonte Nunito
+--------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-nunito: 'Nunito', sans-serif;
 }
 
-@layer base {
-  body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
-  }
+.font-nunito {
+  font-family: var(--font-nunito);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------------------------------------------------------
+   Ajustes opcionais úteis para interfaces modernas
+--------------------------------------------------------- */
+
+/* Deixa textos mais suaves no Windows */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove scroll horizontal acidental */
+body {
+  overflow-x: hidden;
+}
+
+/* Evita zoom automático do iPhone em inputs */
+input, select, textarea {
+  font-size: 16px !important;
 }
