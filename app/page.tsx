@@ -6,14 +6,11 @@ export default function Home() {
   return (
     <main className="min-h-dvh flex flex-col items-center justify-start gap-8 px-6 py-10">
 
-      <Image
-        src="/assets/imagens-app/saudacao-hero.png"
-        alt="Ilustração da tela de saudação"
-        width={1200}
-        height={900}
-        className="w-full h-auto mb-2"
-        priority
-      />
+      <img
+  src="/asset/imagens-app/saudacao-hero.png"
+  alt="Ilustração da tela de saudação"
+  className="w-full h-auto mb-2"
+/>
 
       <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-blue-700">
         Decida com IA!
