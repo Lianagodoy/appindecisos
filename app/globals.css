@@ -9,15 +9,12 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-/* Remove highlight azul feio no mobile */
-* {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent; /* Remove highlight azul feio no mobile */
 }
 
 /* Faz o app ocupar 100% da tela */
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -48,6 +45,81 @@ body {
 }
 
 /* Evita zoom automático do iPhone em inputs */
-input, select, textarea {
+input,
+select,
+textarea {
   font-size: 16px !important;
 }
+
+/* ---------------------------------------------------------
+   PADRÃO DE TELAS COM FUNDO (ESTILO SAUDAÇÃO)
+   .screen          => layout base (centraliza e aplica imagem)
+   .screen-content  => coluna onde ficam textos/botões
+   .screen-XXXX     => escolhe qual imagem de fundo usar
+--------------------------------------------------------- */
+
+/* Layout base de qualquer tela com fundo de imagem */
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh; /* ajuda no mobile */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+/* Área interna da tela (tipo “celular” no meio da imagem) */
+.screen-content {
+  width: 100%;
+  max-width: 430px;          /* largura padrão de app mobile */
+  padding: 24px 16px 40px;   /* margens internas */
+}
+
+/* ---------------------------------------------------------
+   UMA CLASSE POR TELA – SÓ MUDA A IMAGEM
+   (ajuste os nomes dos arquivos conforme suas imagens reais)
+--------------------------------------------------------- */
+
+/* Tela de Saudação */
+.screen-saudacao {
+  background-image: url("/saudacao-hero.png");
+}
+
+/* Tela de Login */
+.screen-login {
+  background-image: url("/login-hero.png");
+}
+
+/* Tela de Cadastro */
+.screen-cadastro {
+  background-image: url("/cadastro-hero.png");
+}
+
+/* Tela de Decisões / Temas */
+.screen-decisoes {
+  background-image: url("/decisoes-hero.png");
+}
+
+/* Tela de Pergunta */
+.screen-pergunta {
+  background-image: url("/pergunta-hero.png");
+}
+
+/* Tela de Resposta */
+.screen-resposta {
+  background-image: url("/resposta-hero.png");
+}
+
+/* Tela de teste de conexão Supabase (se quiser fundo também) */
+.screen-teste {
+  background-image: url("/teste-hero.png");
+}
+
+/* Se tiver outras telas, você pode seguir o mesmo padrão:
+   .screen-minhaoutratelax {
+     background-image: url("/minhaoutratelax-hero.png");
+   }
+*/
