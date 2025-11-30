@@ -61,10 +61,11 @@ textarea {
 /* Layout base de qualquer tela com fundo de imagem */
 .screen {
   min-height: 100vh;
-  min-height: 100dvh; /* ajuda no mobile */
+  min-height: 100dvh;
   display: flex;
-  justify-content: center;
-  align-items: center;
+
+  justify-content: center;   /* CENTRALIZA HORIZONTALMENTE */
+  align-items: flex-start;    /* NÃO CENTRALIZA VERTICALMENTE */
 
   background-size: cover;
   background-position: center top;
@@ -74,8 +75,10 @@ textarea {
 /* Área interna da tela (tipo “celular” no meio da imagem) */
 .screen-content {
   width: 100%;
-  max-width: 430px;          /* largura padrão de app mobile */
-  padding: 24px 16px 40px;   /* margens internas */
+  max-width: 430px;
+  margin: 0 auto;            /* <-- ESSA LINHA QUE CENTRALIZA DE VERDADE */
+  padding: 24px 16px 40px;
+  text-align: center;
 }
 
 /* ---------------------------------------------------------
