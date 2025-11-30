@@ -113,7 +113,7 @@ function SignUpWithName() {
   };
 
   return (
-    <div className="screen screen-login">
+    <div className="screen screen-cadastro">
       <div className="screen-content font-nunito">
         <h1 className="text-3xl font-extrabold text-blue-700 drop-shadow mb-4">
           Criar conta
