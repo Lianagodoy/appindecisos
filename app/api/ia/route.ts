@@ -16,18 +16,23 @@ function personalityForTheme(theme: string) {
     Gastronomia: `
 Estilo: leve, saboroso e divertido.
 Use imagens rápidas de comida, sensações, aromas e texturas.`,
+
     "Viagens e Turismo": `
 Estilo: visual e inspirador.
 Crie imagens mentais breves de lugares, cultura e clima.`,
+
     "Conquistas Profissionais": `
 Estilo: direto e estruturado.
 Mostre prós e contras com clareza, sem rodeios.`,
+
     "Filmes e Séries": `
 Estilo: criativo e referencial.
 Use comparações rápidas com filmes e personagens, sem virar historinha.`,
+
     "Rotina Inteligente": `
 Estilo: prático e minimalista.
 Foque em passos simples e objetivos para organizar a rotina.`,
+
     "Vida Social e Pessoal": `
 Estilo: empático e acolhedor.
 Fale como um amigo que entende sentimentos, mas sem textão.`,
@@ -43,14 +48,18 @@ function sizeRules(mode: Mode) {
 - Máximo 2 parágrafos curtos.
 - No máximo 8 frases no total.
 - Nada de textão ou explicações longas.`,
+
     genios: `
-- 2 ou 3 gênios, cada um com até 3 frases curtas.
+- 3 perspectivas: Gênio Lógico, Sábio Cultural e Mentor Emocional.
+- Cada um com até 3 frases curtas.
 - No máximo 10 frases no total.
-- Insights diretos, sem historinha.`,
+- Nada de nomes reais de pessoas famosas.`,
+
     historia: `
 - Mini-história com no máximo 8 frases.
 - Foco em um único momento marcante.
 - Narrativa leve, divertida, sem descrição longa.`,
+
     amigos: `
 - 3 amigos (racional, divertido, emocional).
 - Cada amigo com no máximo 3 frases curtas.
@@ -95,6 +104,30 @@ Regras gerais:
 
 Regras específicas do modo "${mode}":
 ${sizeRules(mode)}
+
+Se o modo for "genios", SIGA ESTA ESTRUTURA OBRIGATÓRIA:
+
+**Gênio Lógico (inspirado em grandes cientistas):**
+- Análise lógica.
+- Decisão racional.
+- Fatos e clareza.
+(Não cite nomes reais.)
+
+**Sábio Cultural:**
+- Perspectiva divertida e curiosa.
+- Referências culturais amplas, sem nomes reais.
+- Olhar criativo e leve.
+
+**Mentor Emocional:**
+- Foco em sentimentos, bem-estar e impacto emocional.
+- Conselhos gentis e empáticos.
+
+Cada bloco deve ter até 3 frases curtas.
+Máximo total: 10 frases.
+
+IMPORTANTE:
+- Nunca use nomes reais de pessoas famosas.
+- Apenas use os títulos acima como personagens fictícios.
 `.trim();
 
     const userPrompt = `
