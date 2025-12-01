@@ -15,7 +15,6 @@ const LABELS: Record<string, string> = {
   social: "Vida Social e Pessoal",
 };
 
-// mapeia cada tema para a classe de fundo correspondente
 const SCREEN_CLASSES_TEMA: Record<string, string> = {
   gastronomia: "screen-tema-gastronomia",
   viagens: "screen-tema-viagem",
@@ -183,6 +182,7 @@ export default function TemaPage() {
     }
   };
 
+  // 👉 AGORA COM TEMA + PERGUNTA NO LINK
   const handleInviteReal = async () => {
     setError(null);
 
@@ -198,35 +198,31 @@ export default function TemaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tema: temaValido, // ex: "Gastronomia"
-          tema_slug: slug,  // ex: "gastronomia"
+          tema: temaValido,
           question: text,
         }),
       });
 
-      const data = await res.json().catch(() => null);
+      const data = await res.json();
       if (!res.ok) {
         throw new Error(data?.error || "Erro ao gerar convite.");
       }
 
-      const inviteId = data?.inviteId || data?.invite_id;
-      if (!inviteId) {
-        throw new Error("Convite criado, mas sem código de inviteId.");
-      }
+      const inviteId = data.inviteId;
 
-      const link = `${window.location.origin}/opinar/${inviteId}`;
+      const link = `${window.location.origin}/opinar/${inviteId}?tema=${encodeURIComponent(
+        temaValido
+      )}&question=${encodeURIComponent(text)}`;
 
       setAnswer(
         `Copie o link abaixo e envie para um amigo responder:\n\n${link}`
       );
+
       setUsedAmigosReal(true);
       setLastMode("amigos");
     } catch (e: any) {
       console.error("Erro ao criar convite real:", e);
-      setError(
-        e?.message ||
-          "Erro ao criar convite real para amigos. Tente novamente."
-      );
+      setError(e.message || "Erro ao criar convite real para amigos.");
     } finally {
       setSending(false);
     }
@@ -311,10 +307,10 @@ export default function TemaPage() {
                 {answer}
               </div>
 
-              <div className="mt-4 flex flex-col gap-3 items-center w-full">
+              <div className="mt-4 flex gap-2 flex-wrap">
                 <button
                   onClick={handleGostei}
-                  className="w-64 text-center rounded px-3 py-2 bg-green-600 text-white"
+                  className="rounded px-3 py-2 bg-green-600 text-white"
                 >
                   Gostei!
                 </button>
@@ -322,7 +318,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleSugiraDiferente}
                   disabled={sending || usedSuggestion}
-                  className="w-64 text-center rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
+                  className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sugira algo diferente
@@ -331,7 +327,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleGenios}
                   disabled={sending || usedGenios}
-                  className="w-64 text-center rounded px-3 py-2 bg-blue-600 text-white
+                  className="rounded px-3 py-2 bg-blue-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Perguntar aos gênios
@@ -340,7 +336,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleAmigosIA}
                   disabled={sending || usedAmigosIA}
-                  className="w-64 text-center rounded px-3 py-2 bg-purple-600 text-white
+                  className="rounded px-3 py-2 bg-purple-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Opinião dos amigos (IA)
@@ -349,7 +345,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleInviteReal}
                   disabled={sending || usedAmigosReal}
-                  className="w-64 text-center rounded px-3 py-2 bg-yellow-600 text-white
+                  className="rounded px-3 py-2 bg-yellow-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Opinião dos amigos (REAL)
@@ -358,7 +354,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleHistoria}
                   disabled={sending || usedHistoria}
-                  className="w-64 text-center rounded px-3 py-2 bg-pink-600 text-white
+                  className="rounded px-3 py-2 bg-pink-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Mini-história
