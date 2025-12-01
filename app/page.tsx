@@ -4,8 +4,8 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="screen screen-saudacao">
-      <div className="screen-content font-nunito">
-
+      {/* flex + items-center garante centralização do conteúdo na coluna */}
+      <div className="screen-content font-nunito flex flex-col items-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-blue-700 drop-shadow-lg text-center">
           Decida com IA!
         </h1>
@@ -15,7 +15,6 @@ export default function Home() {
         </p>
 
         <div className="w-full max-w-xs space-y-4 mt-6">
-
           <Link
             href="/auth?mode=signup"
             className="block w-full rounded-lg px-4 py-3 text-center font-semibold 
@@ -41,7 +40,6 @@ export default function Home() {
           >
             Já tenho uma conta
           </Link>
-
         </div>
       </div>
     </div>
