@@ -1,78 +1,52 @@
 // app/api/invite/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-// se você estiver usando types do banco, pode descomentar e ajustar o caminho:
-// import type { Database } from "@/lib/database.types";
+
+type InviteBody = {
+  tema?: string;
+  tema_slug?: string;
+  question?: string;
+};
 
 export async function POST(req: NextRequest) {
   try {
-    // Cria o cliente do Supabase ligado ao usuário logado (via cookies)
-    const supabase = createRouteHandlerClient(/*<Database>*/ { cookies });
+    const { tema, tema_slug, question }: InviteBody = await req.json();
 
-    // Descobre o usuário atual
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const texto = (question || "").trim();
 
-    if (userError) {
-      console.error("Erro ao obter usuário:", userError.message);
+    if (!texto || texto.length < 5) {
       return NextResponse.json(
-        { error: "Erro ao obter usuário autenticado." },
-        { status: 500 }
-      );
-    }
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Usuário não autenticado." },
-        { status: 401 }
-      );
-    }
-
-    // Lê o corpo da requisição
-    const body = await req.json();
-    const { tema, question } = body as {
-      tema?: string;
-      question?: string;
-    };
-
-    if (!tema || !question) {
-      return NextResponse.json(
-        { error: "Campos 'tema' e 'question' são obrigatórios." },
+        {
+          error:
+            "Pergunta muito curta. Escreva com um pouco mais de detalhes para gerar o convite.",
+        },
         { status: 400 }
       );
     }
 
-    // Insere o convite na tabela friend_invites
-    const { data, error } = await supabase
-      .from("friend_invites")
-      .insert({
-        user_id: user.id,
-        tema,
-        question,
-      })
-      .select("id")
-      .single();
+    // ✅ Versão simples: não depende mais de usuário autenticado nem de Supabase.
+    // Geramos apenas um código de convite para montar a URL.
+    const rawId = crypto.randomUUID().replace(/-/g, "");
+    const inviteId = rawId.slice(0, 10); // ex.: "c4f9a12bde"
 
-    if (error) {
-      console.error("Erro ao criar convite:", error.message);
-      return NextResponse.json(
-        { error: "Erro ao criar convite de opinião." },
-        { status: 500 }
-      );
-    }
-
-    const inviteId = data.id as string;
-
-    // Por enquanto, a API devolve só o ID.
-    // O frontend vai montar o link final usando window.location.origin.
-    return NextResponse.json({ inviteId });
+    // No futuro, se quiser salvar no Supabase,
+    // podemos usar esse mesmo inviteId como chave na tabela friend_invites.
+    return NextResponse.json(
+      {
+        inviteId,
+        tema: tema || null,
+        tema_slug: tema_slug || null,
+        question: texto,
+      },
+      { status: 200 }
+    );
   } catch (e: any) {
     console.error("Erro inesperado em /api/invite:", e);
     return NextResponse.json(
-      { error: e?.message || "Erro interno na API de convite." },
+      {
+        error:
+          e?.message ||
+          "Erro interno na API de convite. Tente novamente em instantes.",
+      },
       { status: 500 }
     );
   }
