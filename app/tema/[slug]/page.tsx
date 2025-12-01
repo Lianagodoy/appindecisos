@@ -198,17 +198,23 @@ export default function TemaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tema: temaValido,
+          tema: temaValido, // ex: "Gastronomia"
+          tema_slug: slug,  // ex: "gastronomia"
           question: text,
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
         throw new Error(data?.error || "Erro ao gerar convite.");
       }
 
-      const link = `${window.location.origin}/opinar/${data.inviteId}`;
+      const inviteId = data?.inviteId || data?.invite_id;
+      if (!inviteId) {
+        throw new Error("Convite criado, mas sem código de inviteId.");
+      }
+
+      const link = `${window.location.origin}/opinar/${inviteId}`;
 
       setAnswer(
         `Copie o link abaixo e envie para um amigo responder:\n\n${link}`
@@ -217,7 +223,10 @@ export default function TemaPage() {
       setLastMode("amigos");
     } catch (e: any) {
       console.error("Erro ao criar convite real:", e);
-      setError(e.message || "Erro ao criar convite real para amigos.");
+      setError(
+        e?.message ||
+          "Erro ao criar convite real para amigos. Tente novamente."
+      );
     } finally {
       setSending(false);
     }
@@ -302,10 +311,10 @@ export default function TemaPage() {
                 {answer}
               </div>
 
-              <div className="mt-4 flex gap-2 flex-wrap">
+              <div className="mt-4 flex flex-col gap-3 items-center w-full">
                 <button
                   onClick={handleGostei}
-                  className="rounded px-3 py-2 bg-green-600 text-white"
+                  className="w-64 text-center rounded px-3 py-2 bg-green-600 text-white"
                 >
                   Gostei!
                 </button>
@@ -313,7 +322,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleSugiraDiferente}
                   disabled={sending || usedSuggestion}
-                  className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
+                  className="w-64 text-center rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sugira algo diferente
@@ -322,7 +331,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleGenios}
                   disabled={sending || usedGenios}
-                  className="rounded px-3 py-2 bg-blue-600 text-white
+                  className="w-64 text-center rounded px-3 py-2 bg-blue-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Perguntar aos gênios
@@ -331,7 +340,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleAmigosIA}
                   disabled={sending || usedAmigosIA}
-                  className="rounded px-3 py-2 bg-purple-600 text-white
+                  className="w-64 text-center rounded px-3 py-2 bg-purple-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Opinião dos amigos (IA)
@@ -340,7 +349,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleInviteReal}
                   disabled={sending || usedAmigosReal}
-                  className="rounded px-3 py-2 bg-yellow-600 text-white
+                  className="w-64 text-center rounded px-3 py-2 bg-yellow-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Opinião dos amigos (REAL)
@@ -349,7 +358,7 @@ export default function TemaPage() {
                 <button
                   onClick={handleHistoria}
                   disabled={sending || usedHistoria}
-                  className="rounded px-3 py-2 bg-pink-600 text-white
+                  className="w-64 text-center rounded px-3 py-2 bg-pink-600 text-white
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Mini-história
