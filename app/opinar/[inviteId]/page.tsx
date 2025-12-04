@@ -33,13 +33,17 @@ export default function OpinarPage() {
     setSentState("sending");
 
     try {
-      // Monta um texto de opinião amigável para salvar
       const partes: string[] = [];
 
-      if (choice === "sim") partes.push("Opinião: eu faria isso / apoio essa ideia.");
-      if (choice === "nao") partes.push("Opinião: eu não faria isso / não apoio essa ideia.");
-      if (choice === "depende")
+      if (choice === "sim") {
+        partes.push("Opinião: eu faria isso / apoio essa ideia.");
+      }
+      if (choice === "nao") {
+        partes.push("Opinião: eu não faria isso / não apoio essa ideia.");
+      }
+      if (choice === "depende") {
         partes.push("Opinião: depende de alguns detalhes / tenho ressalvas.");
+      }
 
       if (comment.trim()) {
         partes.push(`Comentário: ${comment.trim()}`);
@@ -47,7 +51,6 @@ export default function OpinarPage() {
 
       const opinionText = partes.join("\n");
 
-      // Chamando a mesma rota /api/opiniao que já é usada pelos 'amigos IA'
       const res = await fetch("/api/opiniao", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -76,7 +79,6 @@ export default function OpinarPage() {
     }
   };
 
-  // Se já enviou com sucesso, mostra tela de agradecimento simples
   if (sentState === "ok") {
     return (
       <div className="screen screen-decisoes">
@@ -102,7 +104,6 @@ export default function OpinarPage() {
           Ajude seu amigo a decidir
         </h1>
 
-        {/* Tema / contexto */}
         <p className="text-sm text-slate-600 mb-2 text-center">
           Tema:{" "}
           <span className="font-semibold text-blue-700">
@@ -110,7 +111,6 @@ export default function OpinarPage() {
           </span>
         </p>
 
-        {/* Pergunta do amigo, se estiver na URL */}
         {questionFromUrl ? (
           <div className="mt-3 mb-4 rounded-xl border border-slate-200 bg-white/90 shadow-sm p-3">
             <p className="text-xs font-semibold text-slate-500 mb-1">
@@ -128,7 +128,6 @@ export default function OpinarPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          {/* Nome opcional do amigo */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-slate-700">
               Seu nome (opcional)
@@ -142,7 +141,6 @@ export default function OpinarPage() {
             />
           </div>
 
-          {/* Escolha rápida */}
           <div className="space-y-2">
             <p className="text-sm font-medium text-slate-700">
               O que você acha dessa ideia?
@@ -189,7 +187,6 @@ export default function OpinarPage() {
             </div>
           </div>
 
-          {/* Comentário livre */}
           <div className="space-y-1">
             <label className="text-sm font-medium text-slate-700">
               Quer explicar melhor? (opcional)
@@ -202,11 +199,7 @@ export default function OpinarPage() {
             />
           </div>
 
-          {errorMsg && (
-            <p className="text-sm text-red-600">
-              {errorMsg}
-            </p>
-          )}
+          {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
 
           <button
             type="submit"
