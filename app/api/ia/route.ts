@@ -69,6 +69,72 @@ function sizeRules(mode: Mode) {
   return rules[mode];
 }
 
+// ---- INSTRUÇÕES ADICIONAIS POR MODO ---- //
+function extraModeInstructions(mode: Mode) {
+  if (mode === "genios") {
+    return `
+Você está no modo "gênios".
+
+Use EXATAMENTE esta estrutura:
+
+Gênio Lógico:
+- Análise lógica.
+- Decisão racional.
+- Fatos e clareza.
+
+Sábio Cultural:
+- Perspectiva divertida e curiosa.
+- Referências culturais amplas (sem citar pessoas reais).
+- Olhar criativo e leve.
+
+Mentor Emocional:
+- Foco em sentimentos, bem-estar e impacto emocional.
+- Conselhos gentis e empáticos.
+
+Regras importantes:
+- NÃO use nomes reais de pessoas famosas.
+- NÃO use rótulos "Gênio 1", "Gênio 2" ou "Gênio 3".
+- Use APENAS os títulos: "Gênio Lógico", "Sábio Cultural" e "Mentor Emocional".`.trim();
+  }
+
+  if (mode === "historia") {
+    return `
+Você está no modo "mini-história".
+
+- Transforme a dúvida do usuário em uma pequena cena narrada (em 1ª ou 3ª pessoa).
+- Crie um começo, um pequeno conflito e um desfecho simples.
+- Use tom leve, próximo, como uma micro crônica.
+- NÃO use a estrutura dos gênios.
+- NÃO use os rótulos "Gênio Lógico", "Sábio Cultural" ou "Mentor Emocional".
+- NÃO liste opiniões; apenas conte a história de forma contínua.`.trim();
+  }
+
+  if (mode === "amigos") {
+    return `
+Você está no modo "opinião dos amigos (IA)".
+
+- Crie 3 vozes diferentes:
+  Amigo racional:
+    - Fala de forma analítica, ponderando prós e contras.
+  Amigo divertido:
+    - Traz leveza, humor e ideias criativas.
+  Amigo emocional:
+    - Foca em sentimentos, bem-estar e impacto pessoal.
+
+- Use rótulos como:
+  "Amigo racional:", "Amigo divertido:", "Amigo emocional:".
+- NÃO use a palavra "gênio" aqui.`.trim();
+  }
+
+  // normal
+  return `
+Você está no modo "resposta objetiva normal".
+
+- Foque em clareza na decisão, próximos passos e explicação curta.
+- Se fizer sentido, apresente rapidamente 2 ou 3 caminhos principais,
+  mas sem texto longo.`.trim();
+}
+
 export async function POST(req: Request) {
   try {
     const { theme, question, name, mode = "normal" }: Body =
@@ -102,32 +168,13 @@ Regras gerais:
 - Tom leve, prático, gentil e criativo.
 - Traga clareza, não confusão.
 
-Regras específicas do modo "${mode}":
+Modo atual: "${mode}".
+
+Regras específicas de tamanho para este modo:
 ${sizeRules(mode)}
 
-Se o modo for "genios", SIGA ESTA ESTRUTURA OBRIGATÓRIA:
-
-**Gênio Lógico (inspirado em grandes cientistas):**
-- Análise lógica.
-- Decisão racional.
-- Fatos e clareza.
-(Não cite nomes reais.)
-
-**Sábio Cultural:**
-- Perspectiva divertida e curiosa.
-- Referências culturais amplas, sem nomes reais.
-- Olhar criativo e leve.
-
-**Mentor Emocional:**
-- Foco em sentimentos, bem-estar e impacto emocional.
-- Conselhos gentis e empáticos.
-
-Cada bloco deve ter até 3 frases curtas.
-Máximo total: 10 frases.
-
-IMPORTANTE:
-- Nunca use nomes reais de pessoas famosas.
-- Apenas use os títulos acima como personagens fictícios.
+Instruções adicionais específicas do modo:
+${extraModeInstructions(mode)}
 `.trim();
 
     const userPrompt = `
