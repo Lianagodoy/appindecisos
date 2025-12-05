@@ -24,7 +24,6 @@ const SCREEN_CLASSES_TEMA: Record<string, string> = {
   social: "screen-tema-social",
 };
 
-type Mode = "normal" | "genios" | "historia" | "amigos";
 
 async function salvarOpiniaoDoAmigo(params: {
   amigoNome?: string;
@@ -54,7 +53,7 @@ async function salvarOpiniaoDoAmigo(params: {
 }
 
 export default function TemaPage() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams&lt;{ slug: string }>();
   const router = useRouter();
 
   const [question, setQuestion] = useState("");
@@ -102,7 +101,7 @@ export default function TemaPage() {
     setError(null);
 
     const text = question.trim();
-    if (text.length < 5) {
+    if (text.length &lt; 5) {
       setError("Escreva sua pergunta com um pouco mais de detalhes.");
       return null;
     }
@@ -186,7 +185,7 @@ export default function TemaPage() {
     setError(null);
 
     const text = question.trim();
-    if (text.length < 5) {
+    if (text.length &lt; 5) {
       setError("Escreva sua pergunta com um pouco mais de detalhes.");
       return;
     }
@@ -303,7 +302,7 @@ export default function TemaPage() {
 
             <button
               onClick={handleEnviar}
-              disabled={sending || question.trim().length < 5}
+              disabled={sending || question.trim().length &lt; 5}
               className="block w-full rounded-lg px-6 py-3 font-semibold text-white shadow-lg
                          bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
                          text-base transition-all duration-200
@@ -395,3 +394,4 @@ export default function TemaPage() {
       </div>
     </div>
   );
+}
