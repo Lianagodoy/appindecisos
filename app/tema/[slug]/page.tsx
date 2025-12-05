@@ -53,7 +53,7 @@ async function salvarOpiniaoDoAmigo(params: {
 }
 
 export default function TemaPage() {
-  const { slug } = useParams&lt;{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
 
   const [question, setQuestion] = useState("");
