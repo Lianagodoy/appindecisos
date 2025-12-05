@@ -396,6 +396,3 @@ export default function TemaPage() {
     </div>
   );
 }
-
-
-            
