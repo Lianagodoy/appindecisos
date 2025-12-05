@@ -182,7 +182,6 @@ export default function TemaPage() {
     }
   };
 
-  // 👉 AGORA COM TEMA + PERGUNTA NO LINK
   const handleInviteReal = async () => {
     setError(null);
 
@@ -260,7 +259,6 @@ export default function TemaPage() {
     <div className={`screen ${activeScreenClass}`}>
       <div className="screen-content font-nunito">
         <div className="w-full max-w-xl mx-auto text-left">
-          {/* Cabeçalho com tema e link para trocar */}
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-extrabold text-blue-700 drop-shadow">
               Tema: {temaValido}
@@ -273,13 +271,11 @@ export default function TemaPage() {
             </Link>
           </div>
 
-          {/* Descrição clara do que fazer */}
           <p className="text-base text-slate-700 leading-relaxed mb-5">
             Escreva sua dúvida sobre <span className="font-semibold">{temaValido.toLowerCase()}</span> e deixe o GenIA te ajudar a 
             <span className="font-semibold"> decidir, entender melhor, descobrir possibilidades e aprender rápido.</span>
           </p>
 
-          {/* Bloco de entrada */}
           <div className="space-y-3">
             <textarea
               className="w-full min-h-32 rounded-lg border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -289,12 +285,10 @@ export default function TemaPage() {
               onChange={(e) => setQuestion(e.target.value)}
             />
             
-            {/* Mensagem de erro */}
             {error && (
               <p className="text-red-600 text-sm font-medium">⚠️ {error}</p>
             )}
 
-            {/* Chips de sugestão (exemplos) */}
             <div className="flex flex-wrap gap-2">
               <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-100/70 backdrop-blur-sm">
                 Qual é a melhor opção?
@@ -307,7 +301,6 @@ export default function TemaPage() {
               </span>
             </div>
 
-            {/* CTA principal */}
             <button
               onClick={handleEnviar}
               disabled={sending || question.trim().length < 5}
@@ -319,13 +312,11 @@ export default function TemaPage() {
               {sending ? "⏳ Gerando resposta…" : "Perguntar agora"}
             </button>
 
-            {/* Dica de velocidade */}
             <p className="text-center text-blue-700/70 text-xs">
               ⚡ Resposta chega em ~5–10s
             </p>
           </div>
 
-          {/* Bloco de resposta */}
           {answer && (
             <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-5 bg-white/95 shadow-md">
               <h2 className="text-xl text-blue-700 font-bold mb-3">
@@ -335,9 +326,7 @@ export default function TemaPage() {
                 {answer}
               </div>
 
-              {/* Botões de ação */}
               <div className="mt-5 space-y-2">
-                {/* Linha 1: Ações rápidas */}
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={handleGostei}
@@ -358,7 +347,6 @@ export default function TemaPage() {
                   </button>
                 </div>
 
-                {/* Linha 2: Aprofundar */}
                 <button
                   onClick={handleGenios}
                   disabled={sending || usedGenios}
@@ -369,7 +357,6 @@ export default function TemaPage() {
                   🔍 Aprofundar resposta
                 </button>
 
-                {/* Linha 3: Resumo + Comparar */}
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={handleHistoria}
@@ -392,4 +379,19 @@ export default function TemaPage() {
                   </button>
                 </div>
 
-                {/* Linha 4:
+                <button
+                  onClick={handleInviteReal}
+                  disabled={sending || usedAmigosReal}
+                  className="w-full rounded-lg px-4 py-2 bg-yellow-600 text-white font-semibold text-sm
+                             hover:bg-yellow-700 transition-colors active:scale-[0.98]
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  👥 Pedir opinião dos amigos
+                </button>
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  );
