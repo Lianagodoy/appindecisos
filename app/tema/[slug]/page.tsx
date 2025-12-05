@@ -388,11 +388,4 @@ export default function TemaPage() {
                 >
                   👥 Pedir opinião dos amigos
                 </button>
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+              </div>          
