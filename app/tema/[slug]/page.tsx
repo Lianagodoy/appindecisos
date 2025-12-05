@@ -260,110 +260,136 @@ export default function TemaPage() {
     <div className={`screen ${activeScreenClass}`}>
       <div className="screen-content font-nunito">
         <div className="w-full max-w-xl mx-auto text-left">
-          <div className="flex items-center justify-between">
+          {/* Cabeçalho com tema e link para trocar */}
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-extrabold text-blue-700 drop-shadow">
               Tema: {temaValido}
             </h1>
-            <Link href="/decisoes" className="text-blue-700 underline text-base">
+            <Link 
+              href="/decisoes" 
+              className="text-blue-700 hover:text-blue-800 underline text-sm font-medium transition-colors"
+            >
               Trocar tema
             </Link>
           </div>
 
-          <p className="mt-2 text-base text-slate-700 leading-relaxed">
-            Escreva sua dúvida, curiosidade ou situação sobre{" "}
-            {temaValido.toLowerCase()} e deixe o AppIndecisos te ajudar a{" "}
-            <span className="font-semibold">
-              decidir, entender melhor, descobrir possibilidades e aprender rápido.
-            </span>
+          {/* Descrição clara do que fazer */}
+          <p className="text-base text-slate-700 leading-relaxed mb-5">
+            Escreva sua dúvida sobre <span className="font-semibold">{temaValido.toLowerCase()}</span> e deixe o GenIA te ajudar a 
+            <span className="font-semibold"> decidir, entender melhor, descobrir possibilidades e aprender rápido.</span>
           </p>
 
-          <div className="mt-5 space-y-3">
+          {/* Bloco de entrada */}
+          <div className="space-y-3">
             <textarea
-              className="w-full min-h-36 rounded border px-3 py-3 outline-none focus:ring
-                         bg-transparent text-lg placeholder:text-slate-500"
-              placeholder={`Escreva sua pergunta, dúvida ou curiosidade sobre ${temaValido}…`}
+              className="w-full min-h-32 rounded-lg border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                         bg-white text-base placeholder:text-slate-500 resize-none transition-all"
+              placeholder={`Ex.: Sushi ou pasta? Qual é melhor para...`}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
             />
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+            
+            {/* Mensagem de erro */}
+            {error && (
+              <p className="text-red-600 text-sm font-medium">⚠️ {error}</p>
+            )}
+
+            {/* Chips de sugestão (exemplos) */}
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-100/70 backdrop-blur-sm">
+                Qual é a melhor opção?
+              </span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-100/70 backdrop-blur-sm">
+                Compare prós e contras
+              </span>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium text-blue-700 bg-blue-100/70 backdrop-blur-sm">
+                Sugira alternativas
+              </span>
+            </div>
+
+            {/* CTA principal */}
             <button
               onClick={handleEnviar}
-              disabled={sending}
-              className="block w-full max-w-xs mx-auto rounded-lg px-6 py-3 font-semibold text-blue-800 shadow
-                         bg-gradient-to-b from-slate-100 to-slate-300 hover:from-slate-200 hover:to-slate-400
-                         text-lg
-                         disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={sending || question.trim().length < 5}
+              className="block w-full rounded-lg px-6 py-3 font-semibold text-white shadow-lg
+                         bg-gradient-to-b from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
+                         text-base transition-all duration-200
+                         disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
             >
-              {sending ? "Gerando resposta…" : "Enviar"}
+              {sending ? "⏳ Gerando resposta…" : "Perguntar agora"}
             </button>
+
+            {/* Dica de velocidade */}
+            <p className="text-center text-blue-700/70 text-xs">
+              ⚡ Resposta chega em ~5–10s
+            </p>
           </div>
 
+          {/* Bloco de resposta */}
           {answer && (
-            <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-4 bg-white/90 shadow-sm">
-              <h2 className="text-xl text-blue-700 font-bold mb-2">
-                Resposta
+            <section className="mt-8 max-w-xl rounded-xl border border-slate-200 p-5 bg-white/95 shadow-md">
+              <h2 className="text-xl text-blue-700 font-bold mb-3">
+                ✨ Resposta
               </h2>
-              <div className="whitespace-pre-wrap leading-relaxed text-base">
+              <div className="whitespace-pre-wrap leading-relaxed text-base text-slate-800">
                 {answer}
               </div>
 
-              <div className="mt-4 flex gap-2 flex-wrap">
-                <button
-                  onClick={handleGostei}
-                  className="rounded px-3 py-2 bg-green-600 text-white"
-                >
-                  Gostei!
-                </button>
+              {/* Botões de ação */}
+              <div className="mt-5 space-y-2">
+                {/* Linha 1: Ações rápidas */}
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={handleGostei}
+                    className="flex-1 min-w-max rounded-lg px-3 py-2 bg-green-600 text-white font-semibold text-sm
+                               hover:bg-green-700 transition-colors active:scale-[0.98]"
+                  >
+                    ⭐ Salvar no histórico
+                  </button>
 
-                <button
-                  onClick={handleSugiraDiferente}
-                  disabled={sending || usedSuggestion}
-                  className="rounded px-3 py-2 bg-slate-200 hover:bg-slate-300
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Sugira algo diferente
-                </button>
+                  <button
+                    onClick={handleSugiraDiferente}
+                    disabled={sending || usedSuggestion}
+                    className="flex-1 min-w-max rounded-lg px-3 py-2 bg-slate-200 text-slate-800 font-semibold text-sm
+                               hover:bg-slate-300 transition-colors active:scale-[0.98]
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    🔄 Gerar alternativa
+                  </button>
+                </div>
 
+                {/* Linha 2: Aprofundar */}
                 <button
                   onClick={handleGenios}
                   disabled={sending || usedGenios}
-                  className="rounded px-3 py-2 bg-blue-600 text-white
+                  className="w-full rounded-lg px-4 py-2 bg-blue-600 text-white font-semibold text-sm
+                             hover:bg-blue-700 transition-colors active:scale-[0.98]
                              disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Perguntar aos gênios
+                  🔍 Aprofundar resposta
                 </button>
 
-                <button
-                  onClick={handleAmigosIA}
-                  disabled={sending || usedAmigosIA}
-                  className="rounded px-3 py-2 bg-purple-600 text-white
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Opinião dos amigos (IA)
-                </button>
+                {/* Linha 3: Resumo + Comparar */}
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={handleHistoria}
+                    disabled={sending || usedHistoria}
+                    className="flex-1 min-w-max rounded-lg px-3 py-2 bg-purple-600 text-white font-semibold text-sm
+                               hover:bg-purple-700 transition-colors active:scale-[0.98]
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    📝 Resumo em 3 tópicos
+                  </button>
 
-                <button
-                  onClick={handleInviteReal}
-                  disabled={sending || usedAmigosReal}
-                  className="rounded px-3 py-2 bg-yellow-600 text-white
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Opinião dos amigos (REAL)
-                </button>
+                  <button
+                    onClick={handleAmigosIA}
+                    disabled={sending || usedAmigosIA}
+                    className="flex-1 min-w-max rounded-lg px-3 py-2 bg-indigo-600 text-white font-semibold text-sm
+                               hover:bg-indigo-700 transition-colors active:scale-[0.98]
+                               disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    ⚖️ Comparar prós e contras
+                  </button>
+                </div>
 
-                <button
-                  onClick={handleHistoria}
-                  disabled={sending || usedHistoria}
-                  className="rounded px-3 py-2 bg-pink-600 text-white
-                             disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Mini-história
-                </button>
-              </div>
-            </section>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+                {/* Linha 4:
